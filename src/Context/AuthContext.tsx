@@ -1,4 +1,10 @@
-import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  ReactNode,
+} from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
@@ -38,16 +44,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         // Verificar si el token es válido y no ha expirado
         const decoded = jwtDecode<User & { exp: number }>(token);
         const currentTime = Date.now() / 1000;
-        
+
         if (decoded.exp > currentTime) {
           // Configurar el header de axios para todas las solicitudes
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           setCurrentUser({
-            
             email: decoded.email,
             password: decoded.password,
             role: decoded.role,
-        
           });
         } else {
           // Token expirado, eliminarlo
@@ -64,23 +68,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       // Realiza la solicitud de inicio de sesión a tu API
-      const response = await axios.post('http://13.56.234.70:8080/api/login', { email, password });
+      const response = await axios.post(
+        'http://13.56.234.70:8080/api/cliente/login',
+        { email, password },
+      );
       const { token } = response.data;
-      
+
       // Guarda el token en localStorage
       localStorage.setItem('auth_token', token);
-      
+
       // Configura el header de autorización para futuras solicitudes
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
+
       // Decodifica el token para obtener información del usuario
       const decoded = jwtDecode<User>(token);
       setCurrentUser({
         email: decoded.email,
         password: decoded.password,
-        role: decoded.role
+        role: decoded.role,
       });
-      
+
       return true;
     } catch (error) {
       console.error('Error de inicio de sesión:', error);
@@ -91,10 +98,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = () => {
     // Elimina el token del localStorage
     localStorage.removeItem('auth_token');
-    
+
     // Elimina el header de autorización
     delete axios.defaults.headers.common['Authorization'];
-    
+
     // Limpia el estado del usuario
     setCurrentUser(null);
   };
@@ -114,7 +121,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     logout,
     isAdmin,
     isCliente,
-    loading
+    loading,
   };
 
   return (

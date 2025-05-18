@@ -88,7 +88,7 @@ const CardProducto = () => {
               {item.imagenes.map((imagen, idx) => (
                 <div key={idx}>
                   <img
-                    src={imagen.imagen}
+                    src={URL.createObjectURL(imagen)}
                     alt={`${item.nombre} - ${idx + 1}`}
                     className="w-full h-36 object-cover rounded-md"
                   />

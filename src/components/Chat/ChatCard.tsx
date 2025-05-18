@@ -6,6 +6,15 @@ import UserThree from '../../images/user/user-03.png';
 import UserFour from '../../images/user/user-04.png';
 import UserFive from '../../images/user/user-05.png';
 
+type Chat = {
+  avatar: string;
+  name: string;
+  text: string;
+  time: number;
+  textCount: number;
+  color: string;
+};
+
 const chatData: Chat[] = [
   {
     avatar: UserOne,

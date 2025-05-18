@@ -1,4 +1,4 @@
-import React, { FC, useMemo } from 'react';
+import { FC, useMemo } from 'react';
 import { FaMinus, FaPlus, FaShoppingBag } from 'react-icons/fa';
 import { MdClose, MdDelete } from 'react-icons/md';
 import { useClienteContext } from '../../Context/ClienteContext';
@@ -45,7 +45,7 @@ const Drawer: FC<DrawerProps> = ({ isOpen, onClose }) => {
       <div key={item.id} className="mb-4 mt-3">
         <div className="flex justify-between">
           <img
-            src={producto.imagenes[0]?.imagen}
+            src={producto.imagenes[0]?.name}
             alt={producto.nombre}
             className="w-30 h-30 rounded-lg"
           />

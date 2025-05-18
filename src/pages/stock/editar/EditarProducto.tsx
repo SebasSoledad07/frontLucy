@@ -12,11 +12,10 @@ import EditarProductoImagen from './EditarProdcutoImagen';
 
 const BASE_URL = import.meta.env.VITE_URL_BACKEND_LOCAL;
 
-
 const EditarProducto = () => {
   const { productos, categorias, marcas, catalogos, fetchProductos } =
     useProductoContext();
-    const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -135,7 +134,7 @@ const EditarProducto = () => {
         setErrorMsg(response.data.msg);
       }
     } catch (error) {
-      console.error( error);
+      console.error(error);
       setErrorMsg('Error al guardar el producto');
     } finally {
       setLoading(false);

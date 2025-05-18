@@ -7,7 +7,6 @@ import MetodosDePago from "./Inicio/MetodosPago/MetodosPago"
 
 
 export default function Inicio() {
- 
 
   return (
     <>

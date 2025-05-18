@@ -1,5 +1,18 @@
 import toast from 'react-hot-toast';
-import dataJSON from '../../public/data.json';
+import dataJSONRaw from '../../public/data.json';
+
+type DataJSONType = {
+  [key: string]: {
+    price: number;
+    delta_price: number;
+    rating: string;
+    delta_rating: number;
+    // Add other fields if present in your data.json
+    [key: string]: number | string;
+  };
+};
+
+const dataJSON: DataJSONType = dataJSONRaw as DataJSONType;
 
 
 const createToast=(title: string, msg: string, type: number)=>{toast.custom((t) => (
@@ -8,7 +21,7 @@ const createToast=(title: string, msg: string, type: number)=>{toast.custom((t) 
       className={`${
         t.visible ? 'animate-enter' : 'animate-leave'
       }
-      max-w-md w-full ${type=='0'?"bg-[#04b20c]":type=='1'?"bg-[#eab90f]":"bg-[#e13f32]"} shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+      max-w-md w-full ${type===0?"bg-[#04b20c]":type===1?"bg-[#eab90f]":"bg-[#e13f32]"} shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
     >
       <div className="flex-1 w-0 p-4 ">
         <div className="flex items-start">
@@ -73,31 +86,52 @@ if (alertSettings){
     const value=isNaN(parseFloat(alertSetting.value))?alertSetting.value:parseFloat(alertSetting.value);
     const para=alertSetting.criterion<2?"delta_"+alertSetting.para:alertSetting.para;
     if (alertSetting.id=="ALL"){
-      Object.keys(dataJSON).map((id:string)=>
-      {
-        const condition=alertSetting.criterion=='0'?value<=-1*dataJSON[id][para]:
-        alertSetting.criterion=='1'||alertSetting.criterion=='3'?value>=dataJSON[id][para]:
-        alertSetting.criterion=='2'?value<=dataJSON[id][para]:
-        value==dataJSON[id][para];
-        const realValue=alertSetting.criterion=='0'?dataJSON[id][para]*-1:dataJSON[id][para];
-        if (condition){
-          const msg=`${alertSetting.para} of ${id} ${alertSetting.criterion==0?"goes down by":alertSetting.criterion==1?"goes up by":alertSetting.criterion==2?"is smaller than":alertSetting.criterion==3?"is greater than":"is equal to"} ${realValue}`;
-          createToast(id,msg,alertSetting.type)
+      Object.keys(dataJSON).map((id: string) => {
+        const para =
+          alertSetting.criterion < 2
+            ? ("delta_" + alertSetting.para)
+            : alertSetting.para;
+        const dataValue = Number(dataJSON[id][para]);
+        let condition: boolean;
+        if (alertSetting.criterion === '0') {
+          condition = value >= -1 * dataValue;
+        } else if (alertSetting.criterion === '1' || alertSetting.criterion === '3') {
+          condition = value >= dataValue;
+        } else if (alertSetting.criterion === '2') {
+          condition = value <= dataValue;
+        } else {
+          condition = value == dataValue;
         }
-    
+        const realValue =
+          alertSetting.criterion === '0'
+            ? dataValue * -1
+            : dataValue;
 
-      }
-
-      );
+        if (condition) {
+          const msg = `${alertSetting.para} of ${id} ${
+            alertSetting.criterion == 0
+              ? "goes down by"
+              : alertSetting.criterion == 1
+              ? "goes up by"
+              : alertSetting.criterion == 2
+              ? "is smaller than"
+              : alertSetting.criterion == 3
+              ? "is greater than"
+              : "is equal to"
+          } ${realValue}`;
+          createToast(id, msg, alertSetting.type);
+        }
+      });
     }
     else{
       const id=alertSetting.id;
       
-      const condition=alertSetting.criterion=='0'?value>=-1*dataJSON[id][para]:
-        alertSetting.criterion=='1'||alertSetting.criterion=='3'?value>=dataJSON[id][para]:
-        alertSetting.criterion=='2'?value<=dataJSON[id][para]:
-        value==dataJSON[id][para];
-        const realValue=alertSetting.criterion=='0'?dataJSON[id][para]*-1:dataJSON[id][para];
+      const dataValue = Number(dataJSON[id][para]);
+      const condition=alertSetting.criterion=='0'?value>=-1*dataValue:
+        alertSetting.criterion=='1'||alertSetting.criterion=='3'?value>=dataValue:
+        alertSetting.criterion=='2'?value<=dataValue:
+        value==dataValue;
+      const realValue=alertSetting.criterion=='0'?dataValue*-1:dataValue;
         
         if (condition){
           const msg=`${alertSetting.para} of ${id} ${alertSetting.criterion==0?"goes down by":alertSetting.criterion==1?"goes up by":alertSetting.criterion==2?"is smaller than":alertSetting.criterion==3?"is greater than":"is equal to"} ${realValue}`;

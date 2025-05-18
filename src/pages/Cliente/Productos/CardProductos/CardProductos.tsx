@@ -77,7 +77,6 @@ const ProductList: React.FC<{
             >
               Agregar al carrito
             </button>
-            <p className="mb-2 text-gray-600 text-center text-xs mt-3">STOCK: {producto.stock}</p>
           </div>
         </motion.div>
       ))}

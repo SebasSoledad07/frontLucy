@@ -14,6 +14,7 @@ import EditarVendedor from '../pages/Vendedor/editar/EditarVendedor';
 import Perfil from '../pages/Perfil';
 import Inicio from '../pages/Cliente/Inicio';
 import Login from '../pages/Authentication/Login';
+
 import Productos from '../pages/Cliente/Productos/Productos';
 import InfoProductoCliente from '../pages/Cliente/Productos/informacion/InfoProductoCliente';
 import ResetPassword from '../pages/Authentication/ResetPassword';
@@ -24,6 +25,7 @@ import PedidoCliente from '../pages/Cliente/Pedido/Pedido';
 import Pedidos from '../pages/Pedidos/Pedidos';
 import PedidoEmpleado from '../pages/Pedidos/Pedido/Pedido';
 import Estadisiticas from '../pages/Admin/Estadisticas/Estadisiticas';
+
 const routes: RouteObject[] = [
   {
     path: '/admin/',
@@ -34,7 +36,6 @@ const routes: RouteObject[] = [
       </>
     ),
   },
-
   {
     path: '/admin/stock',
     element: (
@@ -231,7 +232,7 @@ const routes: RouteObject[] = [
     path: '/cliente/reset-password',
     element: (
       <>
-        <PageTitle title="Lucy Mundo de Pijamas Login " />
+        <PageTitle title="Lucy Mundo de Pijamas Reset Password " />
         <ResetPassword />
       </>
     ),
@@ -240,7 +241,7 @@ const routes: RouteObject[] = [
     path: '/cliente/productos',
     element: (
       <>
-        <PageTitle title="Lucy Mundo de Pijamas Login " />
+        <PageTitle title="Lucy Mundo de Pijamas Productos" />
         <Productos />
       </>
     ),
@@ -249,7 +250,7 @@ const routes: RouteObject[] = [
     path: '/cliente/producto/:id/informacion',
     element: (
       <>
-        <PageTitle title="Lucy Mundo de Pijamas Login " />
+        <PageTitle title="Lucy Mundo de Pijamas" />
         <InfoProductoCliente />
       </>
     ),

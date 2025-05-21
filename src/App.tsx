@@ -49,25 +49,26 @@ function App() {
         <Route
           path="/admin/*"
           element={
-            <ProtectedRoute requiredRole="ROLE_ADMINISTRADOR">
+            <ProtectedRoute>
               <DefaultLayout>
                 <Routes>
-                  <Route path="stock" element={<Inventario />} />
-                  <Route path="registrar" element={<RegistrarProducto />} />
-                  <Route path="vendedor" element={<ECommerce />} />
-                  <Route path="vendedores" element={<Vendedores />} />
+                  <Route path="/" element={<ECommerce />} />
+                  <Route path="/stock" element={<Inventario />} />
+                  <Route path="/registrar" element={<RegistrarProducto />} />
+
+                  <Route path="/vendedores" element={<Vendedores />} />
                   <Route
-                    path="vendedores/registrar"
+                    path="/vendedores/registrar"
                     element={<RegistrarVendedor />}
                   />
                   <Route
-                    path="vendedores/editar/:id"
+                    path="/vendedores/editar/:id"
                     element={<EditarVendedor />}
                   />
-                  <Route path="pedidos" element={<Pedidos />} />
-                  <Route path="pedidos/:id" element={<PedidoEmpleado />} />
-                  <Route path="estadisticas" element={<Estadisiticas />} />
-                  <Route path="perfil" element={<Perfil />} />
+                  <Route path="/pedidos" element={<Pedidos />} />
+                  <Route path="/pedidos/:id" element={<PedidoEmpleado />} />
+                  <Route path="/estadisticas" element={<Estadisiticas />} />
+                  <Route path="/perfil" element={<Perfil />} />
                 </Routes>
               </DefaultLayout>
             </ProtectedRoute>

@@ -1,32 +1,25 @@
-import React, { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../Context/AuthContext';
+import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from './AuthContext';
 
 interface ProtectedRouteProps {
-  children: ReactNode;
-  requiredRole?: 'ROLE_ADMINISTRADOR' | 'ROLE_CLIENTE';
+  children: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
-  children,
-  requiredRole,
-}) => {
-  const { user, isAdmin, isCliente } = useAuth();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { user } = useAuth();
+  const location = useLocation();
 
-  // Si no hay usuario autenticado, redirigir al login
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // Don't pass the entire location object - only pass pathname as state
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  // Verificar el rol requerido si se especifica uno
-  if (requiredRole) {
-    if (
-      (requiredRole === 'ROLE_ADMINISTRADOR' && !isAdmin()) ||
-      (requiredRole === 'ROLE_CLIENTE' && !isCliente())
-    ) {
-      return <Navigate to="/unauthorized" />;
-    }
-  }
+  // You can add role-based authorization here if needed
+  // For example:
+  // if (user.role !== 'admin' && location.pathname.startsWith('/admin')) {
+  //   return <Navigate to="/unauthorized" replace />;
+  // }
 
   return <>{children}</>;
 };

@@ -1,34 +1,37 @@
 import React, {
   createContext,
+  useState,
   useContext,
   useEffect,
-  useState,
   ReactNode,
 } from 'react';
 import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
 
 interface User {
   email: string;
   role: string;
 }
 
+// Define context type
 interface AuthContextType {
   user: User | null;
-  login: (
-    email: string,
-    password: string,
-  ) => Promise<{ success: boolean; role?: string }>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  isAdmin: () => boolean;
-  isCliente: () => boolean;
+  loading: boolean;
 }
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  login: async () => {},
+  logout: () => {},
+  loading: true,
+});
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -43,56 +46,45 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, []);
 
-  const login = async (
-    email: string,
-    password: string,
-  ): Promise<{ success: boolean; role?: string }> => {
+  const login = async (email: string, password: string) => {
     try {
-      const response = await fetch('http://localhost:8080/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      setLoading(true);
+      const response = await axios.post('http://13.56.234.70:8080/login', {
+        email,
+        password,
       });
 
-      if (!response.ok) return { success: false };
+      const { token, user } = response.data;
 
-      const token = response.headers
-        .get('Authorization')
-        ?.replace('Bearer ', '');
-      if (token) {
-        const decoded: any = jwtDecode(token);
-        const newUser: User = { email: decoded.sub, role: decoded.role };
-        setUser(newUser);
-        localStorage.setItem('token', token);
-        return { success: true, role: decoded.role };
-      }
+      // Save token to localStorage
+      localStorage.setItem('token', token);
 
-      return { success: false };
+      // Set user in state
+      setUser(user);
     } catch (error) {
-      console.error('Error de login:', error);
-      return { success: false };
+      console.error('Login failed:', error);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
-
+  // Logout function
   const logout = () => {
-    setUser(null);
     localStorage.removeItem('token');
+    setUser(null);
   };
 
-  const isAdmin = () => user?.role === 'ROLE_ADMINISTRADOR';
-  const isCliente = () => user?.role === 'ROLE_CLIENTE';
+  const value = {
+    user,
+    login,
+    logout,
+    loading,
+  };
 
-  return (
-    <AuthContext.Provider value={{ user, login, logout, isAdmin, isCliente }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth debe usarse dentro de un AuthProvider');
-  }
-  return context;
-}
+// Custom hook to use auth context
+export const useAuth = () => useContext(AuthContext);
+
+export default AuthContext;

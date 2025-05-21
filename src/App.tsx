@@ -14,8 +14,18 @@ import DefaultLayout from './layout/DefaultLayout';
 import ClienteLayout from './layout/ClienteLayout';
 import { AuthProvider } from './Context/AuthContext';
 import ProtectedRoute from './Context/ProtectedRoute';
-import LoginPage from './pages/Authentication/LoginPage';
 import UnauthorizedPage from './Context/UnauthorizedPage';
+import Inventario from './pages/stock/Stock';
+import RegistrarProducto from './pages/stock/registrar/RegistrarProducto';
+import Vendedores from './pages/Vendedor/Vendedores';
+import RegistrarVendedor from './pages/Vendedor/registrar/RegistrarVendedor';
+import EditarVendedor from './pages/Vendedor/editar/EditarVendedor';
+import Pedidos from './pages/Pedidos/Pedidos';
+import PedidoEmpleado from './pages/Pedidos/Pedido/Pedido';
+import Estadisiticas from './pages/Admin/Estadisticas/Estadisiticas';
+import Perfil from './pages/Perfil';
+
+import ECommerce from './pages/Dashboard/ECommerce';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -39,8 +49,27 @@ function App() {
         <Route
           path="/admin/*"
           element={
-            <ProtectedRoute requiredRole="admin">
-              <DefaultLayout>{routing}</DefaultLayout>
+            <ProtectedRoute requiredRole="ROLE_ADMINISTRADOR">
+              <DefaultLayout>
+                <Routes>
+                  <Route path="stock" element={<Inventario />} />
+                  <Route path="registrar" element={<RegistrarProducto />} />
+                  <Route path="vendedor" element={<ECommerce />} />
+                  <Route path="vendedores" element={<Vendedores />} />
+                  <Route
+                    path="vendedores/registrar"
+                    element={<RegistrarVendedor />}
+                  />
+                  <Route
+                    path="vendedores/editar/:id"
+                    element={<EditarVendedor />}
+                  />
+                  <Route path="pedidos" element={<Pedidos />} />
+                  <Route path="pedidos/:id" element={<PedidoEmpleado />} />
+                  <Route path="estadisticas" element={<Estadisiticas />} />
+                  <Route path="perfil" element={<Perfil />} />
+                </Routes>
+              </DefaultLayout>
             </ProtectedRoute>
           }
         />
@@ -52,7 +81,6 @@ function App() {
         />
 
         {/* Rutas públicas */}
-        <Route path="/login" element={<LoginPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
         {/* Redirección por defecto */}

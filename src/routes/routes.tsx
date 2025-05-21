@@ -7,7 +7,6 @@ import Inventario from '../pages/stock/Stock';
 import RegistrarProducto from '../pages/stock/registrar/RegistrarProducto';
 import EditarProducto from '../pages/stock/editar/EditarProducto';
 import InformacionProducto from '../pages/stock/informacion/InformacionProducto';
-import LoginPage from '../pages/Authentication/LoginPage';
 
 import Vendedores from '../pages/Vendedor/Vendedores';
 import RegistrarVendedor from '../pages/Vendedor/registrar/RegistrarVendedor';
@@ -32,15 +31,6 @@ const routes: RouteObject[] = [
       <>
         <PageTitle title="Lucy Mundo de Pijamas eCommerce Dashboard " />
         <ECommerce />
-      </>
-    ),
-  },
-   {
-    path: 'admin/login/',
-    element: (
-      <>
-        <PageTitle title="Lucy Mundo de Pijamas Login " />
-        <LoginPage />
       </>
     ),
   },
@@ -126,7 +116,6 @@ const routes: RouteObject[] = [
       </>
     ),
   },
-
 
   {
     path: '/admin/perfil',

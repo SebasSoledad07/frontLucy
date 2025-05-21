@@ -4,29 +4,25 @@ import { useAuth } from '../Context/AuthContext';
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requiredRole?: 'admin' | 'cliente';
+  requiredRole?: 'ROLE_ADMINISTRADOR' | 'ROLE_CLIENTE';
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  requiredRole 
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  requiredRole,
 }) => {
-  const { currentUser, isAdmin, isCliente, loading } = useAuth();
-
-  if (loading) {
-    return <div>Cargando...</div>;
-  }
+  const { user, isAdmin, isCliente } = useAuth();
 
   // Si no hay usuario autenticado, redirigir al login
-  if (!currentUser) {
-    return <Navigate to="login" />;
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Verificar el rol requerido si se especifica uno
   if (requiredRole) {
     if (
-      (requiredRole === 'admin' && !isAdmin()) ||
-      (requiredRole === 'cliente' && !isCliente())
+      (requiredRole === 'ROLE_ADMINISTRADOR' && !isAdmin()) ||
+      (requiredRole === 'ROLE_CLIENTE' && !isCliente())
     ) {
       return <Navigate to="/unauthorized" />;
     }

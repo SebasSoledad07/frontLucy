@@ -5,6 +5,7 @@ import { UserProvider } from '../Context/UserContext';
 import { ProductoProvider } from '../Context/ProductoContext';
 import { UsuariosProvider } from '../Context/UsuariosContext';
 import { PedidoProvider } from '../Context/PedidoContext';
+
 const DefaultLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 

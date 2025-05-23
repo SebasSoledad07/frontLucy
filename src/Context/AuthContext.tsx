@@ -13,20 +13,17 @@ interface User {
   role: string;
 }
 
-// Define context type
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  login: async () => {},
-  logout: () => {},
-  loading: true,
-});
 
+// 1. NO exportes el contexto como default
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// 2. Proveedor como named export
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
@@ -44,6 +41,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         localStorage.removeItem('token');
       }
     }
+    setLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -53,13 +51,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         email,
         password,
       });
-
       const { token, user } = response.data;
-
-      // Save token to localStorage
       localStorage.setItem('token', token);
-
-      // Set user in state
       setUser(user);
     } catch (error) {
       console.error('Login failed:', error);
@@ -68,23 +61,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       setLoading(false);
     }
   };
-  // Logout function
+
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
   };
 
-  const value = {
-    user,
-    login,
-    logout,
-    loading,
-  };
+  const value = { user, login, logout, loading };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Custom hook to use auth context
-export const useAuth = () => useContext(AuthContext);
-
-export default AuthContext;
+// 3. Hook separado y claro
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

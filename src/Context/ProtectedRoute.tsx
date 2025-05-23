@@ -1,25 +1,36 @@
+// ProtectedRoute.tsx
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import Loader from '../common/Loader';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requiredRole?: string;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user } = useAuth();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  requiredRole,
+}) => {
+  const { user, loading } = useAuth();
   const location = useLocation();
 
-  if (!user) {
-    // Don't pass the entire location object - only pass pathname as state
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  if (loading) return <Loader />;
+
+  if (!user && location.pathname !== '/cliente') {
+    return (
+      <Navigate to="/cliente" state={{ from: location.pathname }} replace />
+    );
   }
 
-  // You can add role-based authorization here if needed
-  // For example:
-  // if (user.role !== 'admin' && location.pathname.startsWith('/admin')) {
-  //   return <Navigate to="/unauthorized" replace />;
-  // }
+  if (user?.role === 'ROLE_ADMINISTRADOR' && location.pathname !== '/admin') {
+    return <Navigate to="/admin" state={{ from: location.pathname }} replace />;
+  }
+
+  if (requiredRole && user?.role !== requiredRole) {
+    return <Navigate to="/unauthorized" replace />;
+  }
 
   return <>{children}</>;
 };

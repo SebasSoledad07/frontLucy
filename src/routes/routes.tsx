@@ -1,32 +1,39 @@
 import { RouteObject } from 'react-router-dom';
 import PageTitle from '../components/PageTitle';
+import Inicio from '../pages/Cliente/Inicio';
+import PQR from '../pages/Cliente/PQR/PQR';
+import PreguntasFrecuentres from '../pages/Cliente/Preguntas/PreguntasFrecuentres';
+import PedidoCliente from '../pages/Cliente/Pedido/Pedido';
+import Checkout from '../pages/Cliente/Pago/Checkout';
+import InfoProductoCliente from '../pages/Cliente/Productos/informacion/InfoProductoCliente';
+import Productos from '../pages/Cliente/Productos/Productos';
+import ResetPassword from '../pages/Authentication/ResetPassword';
+import Login from '../pages/Authentication/Login';
 
+import LoginAdmin from '../pages/Authentication/LoginAdmin';
 import ECommerce from '../pages/Dashboard/ECommerce';
-
-import Inventario from '../pages/stock/Stock';
 import RegistrarProducto from '../pages/stock/registrar/RegistrarProducto';
 import EditarProducto from '../pages/stock/editar/EditarProducto';
 import InformacionProducto from '../pages/stock/informacion/InformacionProducto';
-
 import Vendedores from '../pages/Vendedor/Vendedores';
 import RegistrarVendedor from '../pages/Vendedor/registrar/RegistrarVendedor';
 import EditarVendedor from '../pages/Vendedor/editar/EditarVendedor';
-import Perfil from '../pages/Perfil';
-import Inicio from '../pages/Cliente/Inicio';
-import Login from '../pages/Authentication/Login';
-
-import Productos from '../pages/Cliente/Productos/Productos';
-import InfoProductoCliente from '../pages/Cliente/Productos/informacion/InfoProductoCliente';
-import ResetPassword from '../pages/Authentication/ResetPassword';
-import Checkout from '../pages/Cliente/Pago/Checkout';
-import PreguntasFrecuentres from '../pages/Cliente/Preguntas/PreguntasFrecuentres';
-import PQR from '../pages/Cliente/PQR/PQR';
-import PedidoCliente from '../pages/Cliente/Pedido/Pedido';
 import Pedidos from '../pages/Pedidos/Pedidos';
 import PedidoEmpleado from '../pages/Pedidos/Pedido/Pedido';
+import Perfil from '../pages/Perfil';
 import Estadisiticas from '../pages/Admin/Estadisticas/Estadisiticas';
+import Stock from '../pages/stock/Stock';
 
-const routes: RouteObject[] = [
+export const routes: RouteObject[] = [
+  {
+    path: '/login/admin',
+    element: (
+      <>
+        <PageTitle title="Lucy Mundo de Pijamas Login Admin" />
+        <LoginAdmin />
+      </>
+    ),
+  },
   {
     path: '/admin/',
     element: (
@@ -41,7 +48,7 @@ const routes: RouteObject[] = [
     element: (
       <>
         <PageTitle title="Stock " />
-        <Inventario />
+        <Stock />
       </>
     ),
   },
@@ -131,7 +138,7 @@ const routes: RouteObject[] = [
     path: '/admin/estadisticas',
     element: (
       <>
-        <PageTitle title="Perfil" />
+        <PageTitle title="Estadisticas" />
         <Estadisiticas />
       </>
     ),
@@ -169,7 +176,7 @@ const routes: RouteObject[] = [
     element: (
       <>
         <PageTitle title="Stock " />
-        <Inventario />
+        <Stock />
       </>
     ),
   },
@@ -209,7 +216,6 @@ const routes: RouteObject[] = [
       </>
     ),
   },
-
   {
     path: '/cliente/',
     element: (
@@ -292,5 +298,3 @@ const routes: RouteObject[] = [
     ),
   },
 ];
-
-export default routes;

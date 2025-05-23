@@ -1,48 +1,48 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AuthLayout from './AuthLayout'; // Asegúrate de importar correctamente
-
-function Login() {
+function LoginAdmin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  async function save(event: { preventDefault: () => void }) {
-    event.preventDefault();
-    setError('');
-    setSuccessMessage('');
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    try {
-      const response = await axios.post('http://13.56.234.70:8080/login', {
-        email,
-        password,
-      });
+  const from = (location.state as any)?.from?.pathname || null;
+  async function login(email: string, password: string) {
+    const resp = await fetch('http://13.56.234.70:8080/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
 
-      if (response.status === 200) {
-        setSuccessMessage('Inicio de sesión exitoso');
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('rol', response.data.rol);
-
-        setTimeout(() => {
-          if (response.data.rol === 'ROLE_ADMINISTRADOR') {
-            window.location.href = '/admin';
-          } else if (response.data.rol === 'ROLE_CLIENTE') {
-            window.location.href = '/cliente';
-          }
-        }, 1000);
-      }
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        setError('Error de autenticación. Verifica tus credenciales.');
-      } else {
-        setError('Error de red. Intenta nuevamente más tarde.');
-      }
+    if (!resp.ok) {
+      throw new Error('Login fallido: ' + resp.status);
     }
+
+    const { token, rol } = await resp.json();
+
+    // 1) Guarda el token y el rol
+    localStorage.setItem('jwtToken', token);
+    localStorage.setItem('userRole', rol);
+
+    return { token, rol };
   }
 
-  /* const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  /*const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      await login(email, password);
+      //navigate('/admin/dashboard'); // Redirige a la página de inicio del cliente
+      // Redirige a la página de inicio del cliente
+    } catch (err: any) {
+      setError(err.message || 'Error al iniciar sesión');
+    }
+  };
+  */
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     try {
@@ -63,7 +63,6 @@ function Login() {
       setError(err.message || 'Error al iniciar sesión');
     }
   };
-*/
   return (
     <AuthLayout>
       <div className="w-full border-stroke dark:border-strokedark xl:w-1/2 xl:border-l-2">
@@ -74,11 +73,8 @@ function Login() {
           <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
             Iniciar Sesión
           </h2>
-          {successMessage && (
-            <div className="mb-4 text-red-500">{successMessage}</div>
-          )}
 
-          <form onSubmit={save}>
+          <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="mb-2.5 block font-medium text-black dark:text-white">
                 Email
@@ -129,5 +125,4 @@ function Login() {
     </AuthLayout>
   );
 }
-
-export default Login;
+export default LoginAdmin;

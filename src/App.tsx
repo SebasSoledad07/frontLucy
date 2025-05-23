@@ -8,7 +8,7 @@ import {
 } from 'react-router-dom';
 
 import Loader from './common/Loader';
-import routes from './routes/routes';
+import { routes } from './routes/routes';
 
 import DefaultLayout from './layout/DefaultLayout';
 import ClienteLayout from './layout/ClienteLayout';
@@ -24,6 +24,7 @@ import Pedidos from './pages/Pedidos/Pedidos';
 import PedidoEmpleado from './pages/Pedidos/Pedido/Pedido';
 import Estadisiticas from './pages/Admin/Estadisticas/Estadisiticas';
 import Perfil from './pages/Perfil';
+import LoginAdmin from './pages/Authentication/LoginAdmin';
 
 import ECommerce from './pages/Dashboard/ECommerce';
 
@@ -49,7 +50,7 @@ function App() {
         <Route
           path="/admin/*"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole="ROLE_ADMINISTRADOR">
               <DefaultLayout>
                 <Routes>
                   <Route path="/" element={<ECommerce />} />
@@ -80,12 +81,13 @@ function App() {
           path="/cliente/*"
           element={<ClienteLayout>{routing}</ClienteLayout>}
         />
+        <Route path="/login/admin" element={<LoginAdmin />} />
 
         {/* Rutas públicas */}
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
         {/* Redirección por defecto */}
-        <Route path="*" element={<Navigate to="/cliente" replace />} />
+        <Route path="/" element={<Navigate to="/cliente" replace />} />
       </Routes>
     </AuthProvider>
   );

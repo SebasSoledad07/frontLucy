@@ -14,11 +14,11 @@ const ClienteLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
     <main className="dark:bg-slate-900 dark:text-bodydark">
       <ClienteProvider>
         <BannerCliente />
-        {!isPagoRoute ? <NavbarCliente />:<NavbarCheckout />}
+        {!isPagoRoute ? <NavbarCliente /> : <NavbarCheckout />}
         <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
           {children}
         </div>
-{!isPagoRoute && <FooterCliente />}
+        {!isPagoRoute && <FooterCliente />}
       </ClienteProvider>
     </main>
   );

@@ -1,17 +1,18 @@
-import React, { useRef, useState } from "react";
-import { useClienteContext } from "../../../Context/ClienteContext";
-import PageTitle from "../../../components/PageTitle"
+import React, { useRef, useState } from 'react';
+import { useClienteContext } from '../../../Context/ClienteContext';
+import PageTitle from '../../../components/PageTitle';
 
 interface Pregunta {
   id: number;
   pregunta: string;
   respuesta: string;
 }
+[];
 
-const FaqsCard: React.FC<Pregunta> = ({ id, pregunta, respuesta }) => {
+const FaqsCard: React.FC<Pregunta> = ({ pregunta, respuesta }) => {
   const answerElRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState(false);
-  const [answerH, setAnswerH] = useState("0px");
+  const [answerH, setAnswerH] = useState('0px');
 
   const handleOpenAnswer = () => {
     if (answerElRef.current) {
@@ -38,7 +39,12 @@ const FaqsCard: React.FC<Pregunta> = ({ id, pregunta, respuesta }) => {
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20 12H4"
+              />
             </svg>
           ) : (
             <svg
@@ -60,7 +66,7 @@ const FaqsCard: React.FC<Pregunta> = ({ id, pregunta, respuesta }) => {
         <div
           ref={answerElRef}
           className="duration-300"
-          style={state ? { height: answerH } : { height: "0px" }}
+          style={state ? { height: answerH } : { height: '0px' }}
         >
           <div>
             <p className="text-gray-500">{respuesta}</p>
@@ -73,7 +79,7 @@ const FaqsCard: React.FC<Pregunta> = ({ id, pregunta, respuesta }) => {
 
 const Faqs: React.FC = () => {
   const { preguntas } = useClienteContext();
-    console.log(preguntas)
+  console.log(preguntas);
   return (
     <section className="leading-relaxed max-w-screen-xl mt-12 mx-auto px-4 md:px-8">
       <div className="space-y-3 text-center">

@@ -18,6 +18,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
+  error: string | null;
 }
 
 // 1. NO exportes el contexto como default
@@ -29,7 +30,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -51,12 +52,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         email,
         password,
       });
-      const { token, user } = response.data;
-      localStorage.setItem('token', token);
-      setUser(user);
+      if (response.status === 200) {
+        setUser({ email, role: response.data.rol });
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('rol', response.data.rol);
+        setTimeout(() => {
+          if (response.data.rol === 'ROLE_ADMINISTRADOR') {
+            window.location.href = '/admin';
+          } else if (response.data.rol === 'ROLE_CLIENTE') {
+            window.location.href = '/cliente';
+          }
+        }, 1000);
+      }
     } catch (error) {
-      console.error('Login failed:', error);
-      throw error;
+      if (axios.isAxiosError(error)) {
+        setError('Error de autenticación. Verifica tus credenciales.');
+      } else {
+        setError('Error de red. Intenta nuevamente más tarde.');
+      }
     } finally {
       setLoading(false);
     }
@@ -67,7 +80,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setUser(null);
   };
 
-  const value = { user, login, logout, loading };
+  const value = { user, login, logout, loading, error };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

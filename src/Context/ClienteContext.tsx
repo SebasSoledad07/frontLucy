@@ -1,4 +1,5 @@
-import React, { createContext,
+import React, {
+  createContext,
   useContext,
   useEffect,
   useState,
@@ -24,6 +25,7 @@ type ClienteContextType = {
   vaciarCarrito: () => void;
   drawerOpen: boolean;
   setDrawerOpen: Dispatch<SetStateAction<boolean>>;
+  preguntas: Pregunta[] | null;
 };
 
 // Crea el contexto
@@ -136,6 +138,7 @@ export const ClienteProvider: React.FC<{ children: ReactNode }> = ({
         vaciarCarrito,
         drawerOpen,
         setDrawerOpen,
+        preguntas: null, // Asumiendo que no tienes preguntas en este contexto
       }}
     >
       {children}

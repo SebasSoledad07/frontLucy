@@ -18,18 +18,27 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (loading) return <Loader />;
 
-  if (!user && location.pathname !== '/cliente') {
-    return (
-      <Navigate to="/cliente" state={{ from: location.pathname }} replace />
-    );
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (user?.role === 'ROLE_ADMINISTRADOR' && location.pathname !== '/admin') {
-    return <Navigate to="/admin" state={{ from: location.pathname }} replace />;
-  }
-
-  if (requiredRole && user?.role !== requiredRole) {
+  if (requiredRole && user.role !== requiredRole) {
     return <Navigate to="/unauthorized" replace />;
+  }
+
+  // Evitar redirección si ya estás en la ruta correcta
+  if (
+    user.role === 'ROLE_ADMINISTRADOR' &&
+    !location.pathname.startsWith('/admin')
+  ) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  if (
+    user.role === 'ROLE_CLIENTE' &&
+    !location.pathname.startsWith('/cliente')
+  ) {
+    return <Navigate to="/cliente" replace />;
   }
 
   return <>{children}</>;

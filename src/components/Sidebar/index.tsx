@@ -11,7 +11,7 @@ import {
 import Brand from '../../Global/Brand';
 import { useUserContext } from '../../Context/UserContext';
 import { FaFileInvoiceDollar, FaQuestionCircle } from 'react-icons/fa';
-import { BiSolidReport } from "react-icons/bi";
+import { BiSolidReport } from 'react-icons/bi';
 interface SidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (arg: boolean) => void;
@@ -33,11 +33,11 @@ const routesSidebar: RouteItem[] = [
   { to: '/admin/vendedores', icon: AiOutlineUser, label: 'Vendedores' },
 
   { to: '/admin/stock', icon: AiFillDropboxSquare, label: 'Stock' },
-  { to: '/admin/pedidos', icon: FaFileInvoiceDollar , label: 'Pedidos' },
-  { to: '/admin/estadisticas', icon: BiSolidReport  , label: 'Estadisticas' },
+  { to: '/admin/pedidos', icon: FaFileInvoiceDollar, label: 'Pedidos' },
+  { to: '/admin/estadisticas', icon: BiSolidReport, label: 'Estadisticas' },
   {
     to: '/admin/preguntas',
-    icon: FaQuestionCircle ,
+    icon: FaQuestionCircle,
     label: 'Preguntas Frecuentes',
   },
 
@@ -62,7 +62,7 @@ const routesSidebarVendedor: RouteItem[] = [
   { to: '/vendedor/pedidos', icon: FaFileInvoiceDollar, label: 'Pedidos' },
   {
     to: '/vendedor/preguntas',
-    icon: FaQuestionCircle ,
+    icon: FaQuestionCircle,
     label: 'Preguntas Frecuentes',
   },
 
@@ -151,108 +151,119 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
   return (
     <aside
-  ref={sidebar}
-  className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-[#B695E0] duration-300 ease-linear lg:static lg:translate-x-0 ${
-    sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-  }`}
->
-  {/* Brand y botón de cerrar */}
-  <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5 border-b border-[#F4B1C7]">
-    <Link to={'/' + modulo}>
-      <Brand dark={true} />
-    </Link>
-
-    <button
-      ref={trigger}
-      onClick={() => setSidebarOpen(!sidebarOpen)}
-      aria-controls="sidebar"
-      aria-expanded={sidebarOpen}
-      className="block lg:hidden text-[#3A3A3A] hover:text-[#FFFFFF] transition-colors"
+      ref={sidebar}
+      className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-[#B695E0] duration-300 ease-linear lg:static lg:translate-x-0 ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}
     >
-      {/* Ícono de cerrar */}
-      ...
-    </button>
-  </div>
+      {/* Brand y botón de cerrar */}
+      <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5 border-b border-[#F4B1C7]">
+        <Link to={'/' + modulo}>
+          <Brand dark={true} />
+        </Link>
 
-  {/* Navegación */}
-  <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
-    <nav className="mt-3 py-4 px-4 lg:mt-1 lg:px-6">
-      <div>
-        <h3 className="mb-4 ml-4 text-sm font-semibold text-[#7A5B47] uppercase tracking-wider">
-          MENÚ
-        </h3>
-
-        <ul className="mb-6 flex flex-col gap-1.5">
-          {routesFiltered.map((route) =>
-            route.subRoutes ? (
-              <SidebarLinkGroup
-                key={route.to}
-                activeCondition={pathname === route.to || pathname.includes(route.to)}
-              >
-                {(handleClick, open) => (
-                  <React.Fragment>
-                    <div
-                      onClick={(e) => {
-                        e.preventDefault();
-                        sidebarExpanded ? handleClick() : setSidebarExpanded(true);
-                      }}
-                      className="hover:bg-[#B199E1] rounded-lg transition-colors"
-                    >
-                      <IconLink to="#" icon={route.icon}>
-                        <span className="text-[#3A3A3A] group-hover:text-white">
-                          {route.label}
-                        </span>
-                        {/* Flecha */}
-                        ...
-                      </IconLink>
-                    </div>
-                    <div className={`translate transform overflow-hidden ${!open && 'hidden'}`}>
-                      <ul className="mt-2 mb-5.5 flex flex-col gap-1.5 pl-6">
-                        {route?.subRoutes?.map((subRoute) => (
-                          <li key={subRoute.to}>
-                            <NavLink
-                              to={subRoute.to}
-                              className={({ isActive }) =>
-                                `group relative flex items-center gap-2.5 rounded-md px-4 py-2 font-medium duration-300 ease-in-out hover:text-white ${
-                                  isActive
-                                    ? 'bg-[#F4B1C7] text-white'
-                                    : 'text-[#F4B1C7] hover:bg-[#FFE482]'
-                                }`
-                              }
-                            >
-                              {subRoute.label}
-                            </NavLink>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </React.Fragment>
-                )}
-              </SidebarLinkGroup>
-            ) : (
-              <li key={route.to}>
-                <NavLink
-                  to={route.to}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3.5 rounded-lg py-2 px-4 font-medium duration-300 ease-in-out ${
-                      isActive
-                        ? 'bg-[#F4B1C7] text-white'
-                        : 'text-[#3A3A3A] hover:bg-[#79D6D4] hover:text-white'
-                    }`
-                  }
-                >
-                  {route.icon && <span className="text-lg">{route.icon}</span>}
-                  <span>{route.label}</span>
-                </NavLink>
-              </li>
-            )
-          )}
-        </ul>
+        <button
+          ref={trigger}
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-controls="sidebar"
+          aria-expanded={sidebarOpen}
+          className="block lg:hidden text-[#3A3A3A] hover:text-[#FFFFFF] transition-colors"
+        >
+          {/* Ícono de cerrar */}
+          ...
+        </button>
       </div>
-    </nav>
-  </div>
-</aside>
 
+      {/* Navegación */}
+      <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
+        <nav className="mt-3 py-4 px-4 lg:mt-1 lg:px-6">
+          <div>
+            <h3 className="mb-4 ml-4 text-sm font-semibold text-[#7A5B47] uppercase tracking-wider">
+              MENÚ
+            </h3>
+
+            <ul className="mb-6 flex flex-col gap-1.5">
+              {routesFiltered.map((route) =>
+                route.subRoutes ? (
+                  <SidebarLinkGroup
+                    key={route.to}
+                    activeCondition={
+                      pathname === route.to || pathname.includes(route.to)
+                    }
+                  >
+                    {(handleClick, open) => (
+                      <React.Fragment>
+                        <div
+                          onClick={(e) => {
+                            e.preventDefault();
+                            sidebarExpanded
+                              ? handleClick()
+                              : setSidebarExpanded(true);
+                          }}
+                          className="hover:bg-[#B199E1] rounded-lg transition-colors"
+                        >
+                          <IconLink to="#" icon={route.icon}>
+                            <span className="text-[#3A3A3A] group-hover:text-white">
+                              {route.label}
+                            </span>
+                            {/* Flecha */}
+                            ...
+                          </IconLink>
+                        </div>
+                        <div
+                          className={`translate transform overflow-hidden ${
+                            !open && 'hidden'
+                          }`}
+                        >
+                          <ul className="mt-2 mb-5.5 flex flex-col gap-1.5 pl-6">
+                            {route?.subRoutes?.map((subRoute) => (
+                              <li key={subRoute.to}>
+                                <NavLink
+                                  to={subRoute.to}
+                                  className={({ isActive }) =>
+                                    `group relative flex items-center gap-2.5 rounded-md px-4 py-2 font-medium duration-300 ease-in-out hover:text-white ${
+                                      isActive
+                                        ? 'bg-[#F4B1C7] text-white'
+                                        : 'text-[#F4B1C7] hover:bg-[#FFE482]'
+                                    }`
+                                  }
+                                >
+                                  {subRoute.label}
+                                </NavLink>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </React.Fragment>
+                    )}
+                  </SidebarLinkGroup>
+                ) : (
+                  <li key={route.to}>
+                    <NavLink
+                      to={route.to}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3.5 rounded-lg py-2 px-4 font-medium duration-300 ease-in-out ${
+                          isActive
+                            ? 'bg-[#F4B1C7] text-white'
+                            : 'text-[#3A3A3A] hover:bg-[#79D6D4] hover:text-white'
+                        }`
+                      }
+                    >
+                      {route.icon && (
+                        <span className="text-lg">
+                          <route.icon />
+                        </span>
+                      )}
+                      <span>{route.label}</span>
+                    </NavLink>
+                  </li>
+                ),
+              )}
+            </ul>
+          </div>
+        </nav>
+      </div>
+    </aside>
   );
 };
 

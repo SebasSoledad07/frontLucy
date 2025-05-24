@@ -55,7 +55,10 @@ function App() {
                 <Routes>
                   <Route path="/" element={<ECommerce />} />
                   <Route path="/stock" element={<Inventario />} />
-                  <Route path="/registrar" element={<RegistrarProducto />} />
+                  <Route
+                    path="/stock/registrar'"
+                    element={<RegistrarProducto />}
+                  />
 
                   <Route path="/vendedores" element={<Vendedores />} />
                   <Route

@@ -4,7 +4,7 @@ import { useProductoContext } from '../Context/ProductoContext';
 
 const CrearProductoForm: React.FC = () => {
   const { token, fetchProductos, categorias } = useProductoContext();
-  const BASE_URL = import.meta.env.VITE_URL_BACKEND_LOCAL;
+  const BASE_URL = 'http://13.56.234.70:8080/api/';
 
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
@@ -44,7 +44,7 @@ const CrearProductoForm: React.FC = () => {
     });
 
     try {
-      await axios.post(`${BASE_URL}api/productos`, formData, {
+      await axios.post(`${BASE_URL}/productos`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',

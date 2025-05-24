@@ -6,16 +6,17 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../../../common/Loader';
 
-const BASE_URL = import.meta.env.VITE_URL_BACKEND_LOCAL;
+const BASE_URL = 'http://13.56.234.70:8080/api';
 
 const RegistrarProducto = () => {
   const token = localStorage.getItem('token');
-  const { categorias, fetchProductos } =
-    useProductoContext();
+  const { categorias, fetchProductos } = useProductoContext();
   const [nombre, setNombre] = useState('');
+  const [tallaId, setTallaId] = useState<number | undefined>();
+  const [observaciones, setObservaciones] = useState('');
+  const [genero, setGenero] = useState('');
   const [categoria, setCategoria] = useState('');
   const [subCategoria, setSubCategoria] = useState('');
-  const [catalogo,] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [stock, setStock] = useState<number | undefined>();
   const [precioCompra, setPrecioCompra] = useState<number | undefined>();
@@ -61,18 +62,17 @@ const RegistrarProducto = () => {
         [
           JSON.stringify({
             nombre,
-            categoria,
             subCategoria: {
               id: parseInt(subCategoria),
             },
-            catalogo: {
-              id: parseInt(catalogo),
-            },
             descripcion,
-            stock,
+            genero,
+            visible,
+            tallaId,
+            categoria,
             precioCompra,
             precioVenta,
-            visible,
+            observaciones,
           }),
         ],
         { type: 'application/json' },
@@ -83,7 +83,7 @@ const RegistrarProducto = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post(`${BASE_URL}producto/save`, formData, {
+      const response = await axios.post(`${BASE_URL}productos/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,
@@ -175,7 +175,37 @@ const RegistrarProducto = () => {
                     </select>
                   </div>
                 </div>
+                {/* Género */}
+                <div className="mb-4.5">
+                  <label className="mb-2.5 block text-black dark:text-white">
+                    Género
+                  </label>
+                  <select
+                    value={genero}
+                    onChange={(e) => setGenero(e.target.value)}
+                    className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                    required
+                  >
+                    <option value="">Seleccione un género</option>
+                    <option value="Hombre">Hombre</option>
+                    <option value="Mujer">Mujer</option>
+                    <option value="Niños">Niños</option>
+                    <option value="Unisex">Unisex</option>
+                  </select>
+                </div>
                 {/* El resto del formulario */}
+                {/* Talla */}
+                <div className="mb-4.5"></div>
+                <label className="mb-2.5 block text-black dark:text-white">
+                  Talla
+                </label>
+                <input
+                  type="text"
+                  value={tallaId}
+                  onChange={(e) => setTallaId(parseInt(e.target.value))}
+                  placeholder="Ingrese la talla"
+                  className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                />
                 {/* Precio de Compra y Precio de Venta en la misma fila */}
                 <div className="mb-4.5 flex gap-4">
                   <div className="w-1/2">
@@ -256,6 +286,18 @@ const RegistrarProducto = () => {
                     {errorMsg}
                   </div>
                 )}
+                {/* Observaciones */}
+                <div className="mb-4.5"></div>
+                <label className="mb-2.5 block text-black dark:text-white">
+                  Observaciones
+                </label>
+                <input
+                  type="text"
+                  value={observaciones}
+                  onChange={(e) => setObservaciones(e.target.value)}
+                  placeholder="Ingrese observaciones"
+                  className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                />
 
                 <button
                   type="submit"

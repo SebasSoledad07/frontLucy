@@ -41,7 +41,7 @@ export const ProductoProvider: React.FC<{ children: ReactNode }> = ({
   const token = localStorage.getItem('token');
   const [categorias, setCategorias] = useState<Categoria[] | null>([]);
   const [productos, setProductos] = useState<Producto[] | null>([]);
-  const BASE_URL = import.meta.env.VITE_URL_BACKEND_LOCAL;
+  const BASE_URL = 'http://13.56.234.70:8080/api/';
 
   // Función para obtener las categorías y marcas
   const fetchCategorias = async () => {
@@ -49,12 +49,9 @@ export const ProductoProvider: React.FC<{ children: ReactNode }> = ({
       const headers = { Authorization: `Bearer ${token}` };
 
       // Solicitud para obtener las categorías
-      const categoriasResponse = await axios.get(
-        `${BASE_URL}detalles/categoria/all`,
-        {
-          headers,
-        },
-      );
+      const categoriasResponse = await axios.get(`${BASE_URL}/categorias`, {
+        headers,
+      });
       setCategorias(categoriasResponse.data.data);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -68,7 +65,7 @@ export const ProductoProvider: React.FC<{ children: ReactNode }> = ({
         Authorization: `Bearer ${token}`,
       };
       // Solicitud para obtener los productos
-      const productosResponse = await axios.get(`${BASE_URL}producto/all`, {
+      const productosResponse = await axios.get(`${BASE_URL}productos/todos`, {
         headers,
       });
       setProductos(productosResponse.data.data);

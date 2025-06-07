@@ -15,7 +15,7 @@ function Login() {
     setSuccessMessage('');
 
     try {
-      const response = await axios.post('http://13.56.234.70:8080/login', {
+      const response = await axios.post('https://pijamasbackend.xyz/login', {
         email,
         password,
       });

@@ -1,88 +1,90 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import Breadcrumb from '../../../components/Breadcrumbs/Breadcrumb';
-import { useUsuariosContext } from '../../../Context/UsuariosContext';
-import Loader from '../../../common/Loader';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+import { useUsuariosContext } from '../../../Context/UsuariosContext';
+import Breadcrumb from '../../../components/Breadcrumbs/Breadcrumb';
+import Loader from '../../../common/Loader';
 import { Rol } from '../../../types/Rol';
 
-const BASE_URL = import.meta.env.VITE_URL_BACKEND_LOCAL;
 
-
-type FormData = {
-  nombre: string;
-  email: string;
-  cedula: string;
-  celular: string;
-  direccion: string;
-  password: string;
-  rol: Rol | null;
-};
+const BASE_URL =
+  import.meta.env.MODE === 'production'
+    ? import.meta.env.VITE_URL_BACKEND_PROD
+    : import.meta.env.VITE_URL_BACKEND_LOCAL;
 
 const RegistrarVendedor: React.FC = () => {
   const token = localStorage.getItem('token');
   const { roles, fetchUsuarios } = useUsuariosContext();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const navigate=useNavigate()
-  const [formData, setFormData] = useState<FormData>({
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
     nombre: '',
+    apellido: '',
     email: '',
     cedula: '',
-    celular: '',
+    telefono: '',
     direccion: '',
     password: '',
-    rol: null,
+    rol: '',
   });
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/login');
+    }
+  }, [token, navigate]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
-    if (name === 'rol') {
-      const selectedRol = roles?.find((rol) => rol.id === parseInt(value));
-      setFormData((prevData) => ({
-        ...prevData,
-        rol: selectedRol || null,
-      }));
-    } else {
-      setFormData((prevData) => ({
-        ...prevData,
-        [name]: value,
-      }));
-    }
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
-  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
     try {
       setLoading(true);
-      const response = await axios.post(`${BASE_URL}usuario/save`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const payload = {
+        ...formData,
+        rol: roles?.find((rol) => rol.id === parseInt(formData.rol)),
+      };
+      const response = await axios.post(
+        `${BASE_URL}/api/administrativos`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
-
-      if (response.data.success) {
+      );
+      if (response.status === 201 || response.data.success) {
         setFormData({
           nombre: '',
+          apellido: '',
           email: '',
           cedula: '',
-          celular: '',
+          telefono: '',
           direccion: '',
           password: '',
-          rol: null,
+          rol: '',
         });
-        console.log('Usuario registrado:', response.data);
         fetchUsuarios();
-        navigate(-1)
+        navigate(-1);
       } else {
-        setErrorMsg(response.data.msg);
+        setErrorMsg(response.data?.msg || 'Error al registrar el vendedor');
       }
-    } catch (error) {
-      setErrorMsg('Error al registrar el usuario');
-      console.error('Error al registrar el usuario:', error);
+    } catch (error: any) {
+      setErrorMsg(
+        error.response?.data?.msg ||
+          'Error inesperado al registrar el vendedor',
+      );
     } finally {
       setLoading(false);
     }
@@ -92,21 +94,21 @@ const RegistrarVendedor: React.FC = () => {
     <>
       <Breadcrumb pageName="Registrar Vendedor" lastPage="vendedores" />
       {loading && <Loader />}
-      <div className="w-full max-w-5xl mx-auto mt-8 p-6 bg-white rounded-md shadow-md">
+      <div className="bg-white shadow-md mx-auto mt-8 p-6 rounded-md w-full max-w-5xl">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium mb-1">Rol</label>
+          <div className="gap-6 grid grid-cols-1 sm:grid-cols-2">
+            <div className="w-full">
+              <label className="block mb-1 font-medium text-sm">Rol</label>
               <select
                 name="rol"
-                value={formData.rol?.id}
+                value={formData.rol}
                 onChange={handleChange}
-                className="w-full rounded border p-2"
+                className="p-2 border rounded w-full"
                 required
               >
                 <option value="">Seleccione un rol</option>
                 {roles
-                  ?.filter((rol) => rol.id !== 1)
+                  ?.filter((rol) => rol.nombre !== 'ADMINISTRADOR')
                   .map((rol) => (
                     <option key={rol.id} value={rol.id}>
                       {rol.nombre}
@@ -114,39 +116,95 @@ const RegistrarVendedor: React.FC = () => {
                   ))}
               </select>
             </div>
-            {[
-              { label: 'Nombre', name: 'nombre', type: 'text' },
-              { label: 'Email', name: 'email', type: 'email' },
-              { label: 'Cédula', name: 'cedula', type: 'text' },
-              { label: 'Celular', name: 'celular', type: 'text' },
-              { label: 'Dirección', name: 'direccion', type: 'text' },
-              { label: 'Password', name: 'password', type: 'password' },
-            ].map(({ label, name, type }) => (
-              <div key={name} className="w-full">
-                <label className="block text-sm font-medium mb-1">
-                  {label}
-                </label>
-                <input
-                  type={type}
-                  name={name}
-                  value={formData[name as keyof FormData] as string}
-                  onChange={handleChange}
-                  className="w-full rounded border p-2"
-                  required
-                />
-              </div>
-            ))}
+            <div className="w-full">
+              <label className="block mb-1 font-medium text-sm">Nombre</label>
+              <input
+                type="text"
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleChange}
+                className="p-2 border rounded w-full"
+                required
+              />
+            </div>
+            <div className="w-full">
+              <label className="block mb-1 font-medium text-sm">Apellido</label>
+              <input
+                type="text"
+                name="apellido"
+                value={formData.apellido}
+                onChange={handleChange}
+                className="p-2 border rounded w-full"
+                required
+              />
+            </div>
+            <div className="w-full">
+              <label className="block mb-1 font-medium text-sm">Email</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="p-2 border rounded w-full"
+                required
+              />
+            </div>
+            <div className="w-full">
+              <label className="block mb-1 font-medium text-sm">Cédula</label>
+              <input
+                type="text"
+                name="cedula"
+                value={formData.cedula}
+                onChange={handleChange}
+                className="p-2 border rounded w-full"
+                required
+              />
+            </div>
+            <div className="w-full">
+              <label className="block mb-1 font-medium text-sm">Celular</label>
+              <input
+                type="text"
+                name="telefono"
+                value={formData.telefono}
+                onChange={handleChange}
+                className="p-2 border rounded w-full"
+                required
+              />
+            </div>
+            <div className="w-full">
+              <label className="block mb-1 font-medium text-sm">
+                Dirección
+              </label>
+              <input
+                type="text"
+                name="direccion"
+                value={formData.direccion}
+                onChange={handleChange}
+                className="p-2 border rounded w-full"
+                required
+              />
+            </div>
+            <div className="w-full">
+              <label className="block mb-1 font-medium text-sm">Password</label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="p-2 border rounded w-full"
+                required
+              />
+            </div>
           </div>
           {errorMsg && (
-            <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-md">
+            <div className="bg-red-100 mb-4 p-2 rounded-md text-red-700">
               {errorMsg}
             </div>
           )}
-
           <div className="flex items-center gap-2 mt-4">
             <button
               type="submit"
-              className="w-full mt-2 p-2.5 flex-1 text-white bg-indigo-600 rounded-md"
+              className="flex-1 bg-indigo-600 mt-2 p-2.5 rounded-md w-full text-white"
             >
               Registrar
             </button>

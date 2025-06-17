@@ -1,7 +1,10 @@
 import axios from 'axios';
 
-// Import the Producto type
-const API_URL = 'http://localhost:8080/api/productos/todos';
+// Use environment variables for API URL
+const API_URL =
+  (import.meta.env.MODE === 'production'
+    ? import.meta.env.VITE_URL_BACKEND_PROD
+    : import.meta.env.VITE_URL_BACKEND_LOCAL) + '/productos/todos';
 
 class ProductoService {
   async getAllProductos() {

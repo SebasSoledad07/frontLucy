@@ -42,7 +42,11 @@ export const ProductoProvider: React.FC<{ children: ReactNode }> = ({
   const token = localStorage.getItem('token');
   const [categorias, setCategorias] = useState<Categoria[] | null>([]);
   const [productos, setProductos] = useState<Producto[] | null>([]);
-  const BASE_URL = 'https://pijamasbackend.xyz/api';
+  // Use environment variables for API URL
+  const BASE_URL =
+    import.meta.env.MODE === 'production'
+      ? import.meta.env.VITE_URL_BACKEND_PROD
+      : import.meta.env.VITE_URL_BACKEND_LOCAL;
 
   // Función para obtener las categorías y marcas
   const fetchCategorias = async () => {
@@ -50,7 +54,7 @@ export const ProductoProvider: React.FC<{ children: ReactNode }> = ({
       const headers = { Authorization: `Bearer ${token}` };
 
       // Solicitud para obtener las categorías
-      const categoriasResponse = await axios.get(`${BASE_URL}/categorias`, {
+      const categoriasResponse = await axios.get(`${BASE_URL}/api/categorias`, {
         headers,
       });
       setCategorias(categoriasResponse.data.data);
@@ -63,12 +67,14 @@ export const ProductoProvider: React.FC<{ children: ReactNode }> = ({
     try {
       const headers = {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
       };
       // Solicitud para obtener los productos
-      const productosResponse = await axios.get(`${BASE_URL}/productos/todos`, {
-        headers,
-      });
+      const productosResponse = await axios.get(
+        `${BASE_URL}/api/productos/activos`,
+        {
+          headers,
+        },
+      );
       setProductos(productosResponse.data.data);
     } catch (error) {
       console.error('Error fetching data:', error);

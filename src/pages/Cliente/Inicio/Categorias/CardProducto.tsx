@@ -6,9 +6,9 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-import { useProductoContext } from '../../../Context/ProductoContext';
-import { useUserContext } from '../../../Context/UserContext';
-import { Producto } from '../../../types/producto';
+import { useProductoContext } from '../../../../Context/ProductoContext';
+import { useUserContext } from '../../../../Context/UserContext';
+import { Producto } from '../../../../types/producto';
 
 // Add categoriaId prop
 const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
@@ -34,16 +34,15 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
       setLoading(true);
       setError('');
       try {
-        let url = `${BASE_URL}/api/productos/todos`;
+        let url = `${BASE_URL}/api/productos/activos`;
         if (categoriaId) {
           url = `${BASE_URL}/api/productos/categoria/${categoriaId}`;
         } else if (selectedCategoria) {
           url = `${BASE_URL}/api/productos/categoria/${selectedCategoria}`;
         }
         console.log('Fetching productos from:', url);
-        const response = await axios.get(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // Remove Authorization header for GET requests to /activos and /categoria/*
+        const response = await axios.get(url);
         console.log('Productos response:', response.data);
         // Support both array and {data: array}
         const productosData = Array.isArray(response.data)
@@ -171,13 +170,16 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
               <Carousel showThumbs={false} infiniteLoop className="w-full h-36">
                 {item.imagenes && item.imagenes.length > 0
                   ? item.imagenes.map((imagen: any, idx: number) => {
-                      // imagen.url is expected from producto_imagen table
                       let imageUrl = '/placeholder.png';
-                      if (typeof imagen === 'object' && imagen.url) {
-                        // If url is relative, prepend BASE_URL
-                        imageUrl = imagen.url.startsWith('http')
-                          ? imagen.url
-                          : `${BASE_URL}/${imagen.url}`;
+                      if (typeof imagen === 'object') {
+                        if (imagen.data) {
+                          // Render base64 jpg
+                          imageUrl = `data:image/jpeg;base64,${imagen.data}`;
+                        } else if (imagen.url) {
+                          imageUrl = imagen.url.startsWith('http')
+                            ? imagen.url
+                            : `${BASE_URL}/${imagen.url}`;
+                        }
                       }
                       return (
                         <div key={idx}>

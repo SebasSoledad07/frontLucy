@@ -12,6 +12,8 @@ import AuthLayout from './AuthLayout'; // Asegúrate de importar correctamente
 
 // Asegúrate de importar correctamente
 
+// Asegúrate de importar correctamente
+
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,9 +24,13 @@ function Login() {
     event.preventDefault();
     setError('');
     setSuccessMessage('');
-
+    // Use environment variables for API URL
+    const API_URL =
+      (import.meta.env.MODE === 'production'
+        ? import.meta.env.VITE_URL_BACKEND_PROD
+        : import.meta.env.VITE_URL_BACKEND_LOCAL) + '/login';
     try {
-      const response = await axios.post('https://pijamasbackend.xyz/login', {
+      const response = await axios.post(API_URL, {
         email,
         password,
       });

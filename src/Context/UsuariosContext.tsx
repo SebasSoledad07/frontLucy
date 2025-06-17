@@ -1,9 +1,14 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode, } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react';
 import axios from 'axios';
 
 import { Usuario } from '../types/Usuario';
 import { Rol } from '../types/Rol';
-
 
 // Define el tipo para el contexto del usuario
 type UsuariosContextType = {
@@ -57,7 +62,7 @@ export const UsuariosProvider: React.FC<{ children: ReactNode }> = ({
       const rolesResponse = await axios.get(`${normalizedBaseUrl}/api/roles`, {
         headers,
       });
-      setRoles(rolesResponse.data.data);
+      setRoles(rolesResponse.data); // Use the array directly, not rolesResponse.data.data
     } catch (error) {
       console.error('Error fetching data:', error);
     }

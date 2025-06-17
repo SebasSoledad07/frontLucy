@@ -1,5 +1,9 @@
+// Use environment variables for API URL
+export const API_URL =
+  import.meta.env.MODE === "production"
+    ? import.meta.env.VITE_URL_BACKEND_PROD + "/productos"
+    : import.meta.env.VITE_URL_BACKEND_LOCAL + "/productos";
 
-export const API_URL = "http://localhost:8080/api/productos";
 export interface ProductoResponseDto {
   id: number;
   nombre: string;

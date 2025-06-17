@@ -1,8 +1,9 @@
-import { motion } from 'framer-motion';
 import { Carousel } from 'react-responsive-carousel';
 import { useNavigate } from 'react-router-dom';
-import { useClienteContext } from '../../../../Context/ClienteContext';
 import { BiSolidLike } from 'react-icons/bi';
+import { motion } from 'framer-motion';
+
+import { useClienteContext } from '../../../../Context/ClienteContext';
 
 const ProductList: React.FC<{
   filteredProductos: any[];
@@ -14,11 +15,11 @@ const ProductList: React.FC<{
     navigate(`/cliente/producto/${id}/informacion`);
   };
   return (
-    <div className="grid  p-4  grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3  dark:bg-slate-900 dark:border-t dark:border">
+    <div className="gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 dark:bg-slate-900 p-4 dark:border dark:border-t">
       {filteredProductos?.map((producto, index) => (
         <motion.div
           key={producto.id}
-          className="relative overflow-hidden "
+          className="relative overflow-hidden"
           whileHover={{ scale: 1.02 }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -31,24 +32,38 @@ const ProductList: React.FC<{
               className="rounded-lg"
               onClickItem={() => handleClick(producto.id)}
             >
-              {producto.imagenes.map((imagen: any, idx: number) => (
-                <div key={idx} style={{ width: '300px', height: '300px' }}>
-                  <img
-                    src={imagen.imagen}
-                    alt={`${producto.nombre} - ${idx + 1}`}
-                    width={300}
-                    height={300}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-              ))}
+              {producto.imagenes.map((imagen: any, idx: number) => {
+                let imageUrl = '/placeholder.jpg';
+                if (typeof imagen === 'object') {
+                  if (imagen.data) {
+                    imageUrl = `data:image/jpeg;base64,${imagen.data}`;
+                  } else if (imagen.url) {
+                    imageUrl = imagen.url.startsWith('http')
+                      ? imagen.url
+                      : `/` + imagen.url.replace(/^\//, '');
+                  }
+                } else if (typeof imagen === 'string') {
+                  imageUrl = imagen;
+                }
+                return (
+                  <div key={idx} style={{ width: '300px', height: '300px' }}>
+                    <img
+                      src={imageUrl}
+                      alt={`${producto.nombre} - ${idx + 1}`}
+                      width={300}
+                      height={300}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                );
+              })}
             </Carousel>
           ) : (
             <div style={{ width: '300px', height: '300px' }}>
               <img
                 src="/placeholder.jpg"
                 alt={producto.nombre}
-                className="object-cover w-full h-full rounded-lg"
+                className="rounded-lg w-full h-full object-cover"
               />
             </div>
           )}
@@ -58,22 +73,25 @@ const ProductList: React.FC<{
               onClick={() => handleClick(producto.id)}
               className="cursor-pointer"
             >
-              <h3 className="mb-2 text-lg font-semibold">
+              <h3 className="mb-2 font-semibold text-lg">
                 {producto.nombre.length > 22
                   ? producto.nombre.substring(0, 22) + '...'
                   : producto.nombre}
               </h3>
-              <div className='flex justify-between'>
-              <p className="mb-2 text-gray-600">{producto.marca.nombre} </p>
-              {producto.recomendado && <BiSolidLike className='text-blue-700' title="Recomendado" />}
+              <div className="flex justify-between">
+                <p className="mb-2 text-gray-600">{producto.marca.nombre} </p>
+                {producto.recomendado && (
+                  <BiSolidLike className="text-blue-700" title="Recomendado" />
+                )}
               </div>
-              
-              <p className="mb-2 text-gray-800 font-semibold">
+
+              <p className="mb-2 font-semibold text-gray-800">
                 {formatCurrency(producto.precioVenta || 0)}
               </p>
             </div>
-            <button className="mt-2 w-full rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
-            onClick={() => agregarAlCarrito(producto.id)}
+            <button
+              className="bg-blue-600 hover:bg-blue-700 mt-2 px-4 py-2 rounded w-full font-medium text-white"
+              onClick={() => agregarAlCarrito(producto.id)}
             >
               Agregar al carrito
             </button>

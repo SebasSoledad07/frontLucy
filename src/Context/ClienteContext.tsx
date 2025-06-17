@@ -1,17 +1,10 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-  Dispatch,
-  SetStateAction,
-} from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, Dispatch, SetStateAction, } from 'react';
 import axios from 'axios';
 
 import { Categoria } from '../types/Categoria';
 import { Producto } from '../types/producto';
 import Carrito from '../types/Carrito';
+
 
 // Define el tipo para el contexto del cliente
 type ClienteContextType = {
@@ -70,10 +63,7 @@ export const ClienteProvider: React.FC<{ children: ReactNode }> = ({
   const fetchCategorias = async () => {
     try {
       if (!normalizedBaseUrl) throw new Error('BASE_URL is not defined');
-      const response = await axios.get(
-        `${normalizedBaseUrl}/api/categorias`,
-        token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
-      );
+      const response = await axios.get(`${normalizedBaseUrl}/api/categorias`);
       setCategorias(response.data.data);
     } catch (error) {
       console.error('Error fetching categorías:', error);
@@ -84,15 +74,7 @@ export const ClienteProvider: React.FC<{ children: ReactNode }> = ({
     try {
       if (!normalizedBaseUrl) throw new Error('BASE_URL is not defined');
       const response = await axios.get(
-        `${normalizedBaseUrl}/api/productos/todos`,
-        token
-          ? {
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          : { headers: { 'Content-Type': 'application/json' } },
+        `${normalizedBaseUrl}/api/productos/activos`,
       );
       setProductos(response.data.data);
     } catch (error) {

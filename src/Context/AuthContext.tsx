@@ -48,7 +48,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:8080/login', {
+      // Use environment variables for API URL
+      const API_URL =
+        (import.meta.env.MODE === 'production'
+          ? import.meta.env.VITE_URL_BACKEND_PROD
+          : import.meta.env.VITE_URL_BACKEND_LOCAL) + '/login';
+      const response = await axios.post(API_URL, {
         email,
         password,
       });

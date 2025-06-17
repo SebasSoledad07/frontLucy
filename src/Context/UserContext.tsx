@@ -51,9 +51,19 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
   const parseToken = (token: string) => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-
-      setModulo(payload?.rol?.nombre?.toLowerCase());
-
+      console.log('DEBUG: token payload', payload);
+      // Extract role from 'rol' or directly from 'rol' string
+      let roleName = null;
+      if (payload?.rol?.nombre) {
+        roleName = payload.rol.nombre;
+      } else if (payload?.rol) {
+        roleName = payload.rol;
+      } else if (payload?.role) {
+        roleName = payload.role;
+      }
+      // Keep the ROLE_ prefix and use uppercase for consistency
+      roleName = roleName ? roleName.toUpperCase() : null;
+      setModulo(roleName);
       setUser(payload);
     } catch (error) {
       console.error('Failed to parse token:', error);
@@ -118,8 +128,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     <UserContext.Provider
       value={{
         token,
-        modulo:
-          modulo || (user?.rol?.nombre ? user.rol.nombre.toLowerCase() : null),
+        modulo,
         user,
         usuario,
         fetchInformacionUsuario,

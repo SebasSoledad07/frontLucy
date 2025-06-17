@@ -1,19 +1,8 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-import AuthLayout from './AuthLayout'; // Asegúrate de importar correctamente
+import AuthLayout from './AuthLayout';
 
-// Asegúrate de importar correctamente
-
-// Asegúrate de importar correctamente
-
-// Asegúrate de importar correctamente
-
-// Asegúrate de importar correctamente
-
-// Asegúrate de importar correctamente
-
-// Asegúrate de importar correctamente
 function LoginAdmin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,8 +12,15 @@ function LoginAdmin() {
   const location = useLocation();
 
   const from = (location.state as any)?.from?.pathname || null;
+
+  // Use environment variables for API URL
+  const API_URL =
+    (import.meta.env.MODE === 'production'
+      ? import.meta.env.VITE_URL_BACKEND_PROD
+      : import.meta.env.VITE_URL_BACKEND_LOCAL) + '/login';
+
   async function login(email: string, password: string) {
-    const resp = await fetch('http://localhost:8080/login', {
+    const resp = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),

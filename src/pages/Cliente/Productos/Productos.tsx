@@ -43,16 +43,12 @@ const Productos: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        // Get the current user JWT token from localStorage (or your auth context if needed)
-        const token = localStorage.getItem('token');
-        const headers: HeadersInit | undefined = token
-          ? { Authorization: `Bearer ${token}` }
-          : undefined;
+        // Always fetch /api/productos/activos, no authorization
         const [productosRes, categoriasRes, subcategoriasRes] =
           await Promise.all([
-            fetch('/api/productos/todos', headers ? { headers } : undefined),
-            fetch('/api/categorias', headers ? { headers } : undefined),
-            fetch('/api/subcategorias', headers ? { headers } : undefined),
+            fetch('/api/productos/activos'),
+            fetch('/api/categorias'),
+            fetch('/api/subcategorias'),
           ]);
         if (!productosRes.ok || !categoriasRes.ok || !subcategoriasRes.ok) {
           throw new Error('Error al obtener los datos');

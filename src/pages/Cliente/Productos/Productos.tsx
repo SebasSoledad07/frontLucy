@@ -21,6 +21,12 @@ function formatCurrency(value: number | 0) {
 }
 
 const Productos: React.FC = () => {
+  // BASE_URL for API requests
+  const BASE_URL =
+    import.meta.env.MODE === 'production'
+      ? import.meta.env.VITE_URL_BACKEND_PROD
+      : import.meta.env.VITE_URL_BACKEND_LOCAL;
+
   // Estados para los datos
   const [productos, setProductos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
@@ -46,9 +52,9 @@ const Productos: React.FC = () => {
         // Always fetch /api/productos/activos, no authorization
         const [productosRes, categoriasRes, subcategoriasRes] =
           await Promise.all([
-            fetch('/api/productos/activos'),
-            fetch('/api/categorias'),
-            fetch('/api/subcategorias'),
+            fetch(`${BASE_URL}/api/productos/activos`),
+            fetch(`${BASE_URL}/api/categorias`),
+            fetch(`${BASE_URL}/api/subcategorias`),
           ]);
         if (!productosRes.ok || !categoriasRes.ok || !subcategoriasRes.ok) {
           throw new Error('Error al obtener los datos');
@@ -74,7 +80,7 @@ const Productos: React.FC = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [BASE_URL]);
 
   // Productos filtrados y ordenados
   const filteredProductos = useMemo(() => {

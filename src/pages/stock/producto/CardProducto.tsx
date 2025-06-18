@@ -66,8 +66,9 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
     const fetchCategorias = async () => {
       setCategoriasLoading(true);
       try {
-        const response = await axios.get(`${BASE_URL}/api/categorias`);
-        setCategorias(response.data.data || []);
+        const response = await fetch(`${BASE_URL}/api/categorias`);
+        const data = await response.json();
+        setCategorias(data.data || []);
       } catch (err) {
         setCategorias([]);
       } finally {
@@ -81,8 +82,9 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
   useEffect(() => {
     const fetchSubCategorias = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/api/subcategorias`);
-        setSubCategorias(response.data.data || []);
+        const response = await fetch(`${BASE_URL}/api/subcategorias`);
+        const data = await response.json();
+        setSubCategorias(data.data || []);
       } catch (err) {
         setSubCategorias([]);
       }
@@ -94,20 +96,11 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
   const filteredProductos = productos.filter((producto) => {
     // Categoria filter
     const matchCategoria = selectedCategoria
-      ? producto.categoriaId?.toString() === selectedCategoria ||
-        producto.categoria?.id?.toString() === selectedCategoria
+      ? producto.subCategoria?.categoria?.id?.toString() === selectedCategoria
       : true;
-    // Subcategoria filter: check producto and variantes
+    // Subcategoria filter: check producto
     const matchSubCategoria = selectedSubCategoria
-      ? producto.subcategoriaId?.toString() === selectedSubCategoria ||
-        producto.subCategoria?.id?.toString() === selectedSubCategoria ||
-        (producto.variante &&
-          Array.isArray(producto.variante) &&
-          producto.variante.some(
-            (v) =>
-              v.subcategoriaId?.toString() === selectedSubCategoria ||
-              v.subCategoria?.id?.toString() === selectedSubCategoria,
-          ))
+      ? producto.subCategoria?.id?.toString() === selectedSubCategoria
       : true;
     return matchCategoria && matchSubCategoria;
   });
@@ -136,46 +129,327 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
   console.log('Categorias from context:', categorias);
   console.log('Subcategorias fetched:', subCategorias);
 
+  // Modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedProducto, setSelectedProducto] = useState<any>(null);
+  const [editForm, setEditForm] = useState<any>({});
+
+  // Open modal and set producto/variante
+  const handleEditClick = (producto: any) => {
+    setSelectedProducto(producto);
+    setEditForm({
+      ...producto,
+      variante:
+        producto.variante && Array.isArray(producto.variante)
+          ? producto.variante[0]
+          : {},
+    });
+    setEditModalOpen(true);
+  };
+
+  // Handle form changes
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setEditForm((prev: any) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  // Save changes (for now, just close modal)
+  const handleSave = () => {
+    // Here you would update the producto/variante in your backend or state
+    setEditModalOpen(false);
+  };
+
   return (
     <div>
-      {showSelectors && (
-        <div className="flex md:flex-row flex-col gap-4 mb-4 ml-4">
-          {categoriasLoading ? (
-            <span className="text-[#7A5B47]">Cargando categorías...</span>
-          ) : (
-            <select
-              value={selectedCategoria}
-              onChange={(e) => {
-                setSelectedCategoria(e.target.value);
-                setSelectedSubCategoria('');
-              }}
-              className="bg-white p-2 border border-[#F4B1C7] rounded-md focus:ring-[#B695E0] focus:ring-2 text-[#7A5B47]"
+      {/* Edit Modal */}
+      {editModalOpen && (
+        <div className="z-[9999] fixed inset-0 flex justify-center items-center bg-black bg-opacity-60">
+          <div className="relative bg-white shadow-lg p-6 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <button
+              className="top-2 right-2 absolute text-gray-500 hover:text-gray-700"
+              onClick={() => setEditModalOpen(false)}
             >
-              <option value="">Todas las Categorías</option>
-              {categorias.map((categoria) => (
-                <option key={categoria.id} value={categoria.id?.toString()}>
-                  {categoria.nombre}
-                </option>
-              ))}
-            </select>
-          )}
-
-          <select
-            value={selectedSubCategoria}
-            onChange={(e) => setSelectedSubCategoria(e.target.value)}
-            className="bg-white p-2 border border-[#F4B1C7] rounded-md focus:ring-[#B695E0] focus:ring-2 text-[#7A5B47]"
-            disabled={subcategoriasToShow.length === 0}
-          >
-            <option value="">Todas las Subcategorías</option>
-            {subcategoriasToShow.map((subCategoria) => (
-              <option key={subCategoria.id} value={subCategoria.id.toString()}>
-                {subCategoria.nombre}
-              </option>
-            ))}
-          </select>
+              ✕
+            </button>
+            <h2 className="mb-4 font-bold text-xl">Editar Producto</h2>
+            <form className="space-y-3">
+              {/* Nombre del Producto */}
+              <div>
+                <label className="block font-medium text-sm">
+                  Nombre del Producto
+                </label>
+                <input
+                  type="text"
+                  name="nombre"
+                  placeholder="Ingrese el nombre del producto"
+                  value={editForm.nombre || ''}
+                  onChange={handleFormChange}
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+              {/* Categoría */}
+              <div>
+                <label className="block font-medium text-sm">Categoría</label>
+                <select
+                  name="categoriaId"
+                  value={editForm.categoriaId || ''}
+                  onChange={(e) =>
+                    setEditForm((prev: any) => ({
+                      ...prev,
+                      categoriaId: e.target.value,
+                    }))
+                  }
+                  className="p-2 border rounded w-full"
+                >
+                  <option value="">Seleccione una categoría</option>
+                  {categorias.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {/* Subcategoría */}
+              <div>
+                <label className="block font-medium text-sm">
+                  Subcategoría
+                </label>
+                <select
+                  name="subcategoriaId"
+                  value={editForm.subcategoriaId || ''}
+                  onChange={(e) =>
+                    setEditForm((prev: any) => ({
+                      ...prev,
+                      subcategoriaId: e.target.value,
+                    }))
+                  }
+                  className="p-2 border rounded w-full"
+                >
+                  <option value="">Seleccione una subcategoría</option>
+                  {subCategorias
+                    .filter((sub) =>
+                      editForm.categoriaId
+                        ? sub.categoria?.id === Number(editForm.categoriaId)
+                        : true,
+                    )
+                    .map((sub) => (
+                      <option key={sub.id} value={sub.id}>
+                        {sub.nombre}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              {/* Género */}
+              <div>
+                <label className="block font-medium text-sm">Género</label>
+                <select
+                  name="genero"
+                  value={editForm.genero || ''}
+                  onChange={(e) =>
+                    setEditForm((prev: any) => ({
+                      ...prev,
+                      genero: e.target.value,
+                    }))
+                  }
+                  className="p-2 border rounded w-full"
+                >
+                  <option value="">Seleccione un género</option>
+                  <option value="Niño">Niño</option>
+                  <option value="Niña">Niña</option>
+                  <option value="Unisex">Unisex</option>
+                </select>
+              </div>
+              {/* Talla */}
+              <div>
+                <label className="block font-medium text-sm">Talla</label>
+                <select
+                  name="tallaId"
+                  value={editForm.variante?.talla?.id || ''}
+                  onChange={(e) => {
+                    setEditForm((prev: any) => ({
+                      ...prev,
+                      variante: {
+                        ...prev.variante,
+                        talla: {
+                          ...prev.variante?.talla,
+                          id: e.target.value,
+                        },
+                      },
+                    }));
+                  }}
+                  className="p-2 border rounded w-full"
+                >
+                  <option value="">Seleccione una talla</option>
+                  {/* You may want to map available tallas here if you have them */}
+                  {editForm.variante && editForm.variante.talla && (
+                    <option value={editForm.variante.talla.id}>
+                      {editForm.variante.talla.nombre}
+                    </option>
+                  )}
+                </select>
+              </div>
+              {/* Precio de Compra */}
+              <div>
+                <label className="block font-medium text-sm">
+                  Precio de Compra
+                </label>
+                <input
+                  type="number"
+                  name="precioCompra"
+                  placeholder="Ingrese el precio de compra"
+                  value={editForm.variante?.precioCompra || ''}
+                  onChange={(e) =>
+                    setEditForm((prev: any) => ({
+                      ...prev,
+                      variante: {
+                        ...prev.variante,
+                        precioCompra: e.target.value,
+                      },
+                    }))
+                  }
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+              {/* Precio de Venta */}
+              <div>
+                <label className="block font-medium text-sm">
+                  Precio de Venta
+                </label>
+                <input
+                  type="number"
+                  name="precioVenta"
+                  placeholder="Ingrese el precio de venta"
+                  value={editForm.variante?.precioVenta || ''}
+                  onChange={(e) =>
+                    setEditForm((prev: any) => ({
+                      ...prev,
+                      variante: {
+                        ...prev.variante,
+                        precioVenta: e.target.value,
+                      },
+                    }))
+                  }
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+              {/* Stock */}
+              <div>
+                <label className="block font-medium text-sm">Stock</label>
+                <input
+                  type="number"
+                  name="stockActual"
+                  placeholder="Ingrese el stock"
+                  value={editForm.variante?.stockActual || ''}
+                  onChange={(e) =>
+                    setEditForm((prev: any) => ({
+                      ...prev,
+                      variante: {
+                        ...prev.variante,
+                        stockActual: e.target.value,
+                      },
+                    }))
+                  }
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+              {/* ¿Producto visible? */}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="activo"
+                  checked={!!editForm.activo}
+                  onChange={handleFormChange}
+                  className="mr-2"
+                />
+                <label className="font-medium text-sm">
+                  ¿Producto visible?
+                </label>
+              </div>
+              {/* Descripción */}
+              <div>
+                <label className="block font-medium text-sm">Descripción</label>
+                <input
+                  type="text"
+                  name="descripcion"
+                  placeholder="Ingrese una descripción"
+                  value={editForm.descripcion || ''}
+                  onChange={handleFormChange}
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+              {/* Observaciones */}
+              <div>
+                <label className="block font-medium text-sm">
+                  Observaciones
+                </label>
+                <input
+                  type="text"
+                  name="observaciones"
+                  placeholder="Ingrese observaciones"
+                  value={editForm.observaciones || ''}
+                  onChange={handleFormChange}
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+              {/* Stock a agregar */}
+              <div>
+                <label className="block font-medium text-sm">
+                  Stock a agregar
+                </label>
+                <input
+                  type="number"
+                  name="stockAgregar"
+                  placeholder="Ingrese la cantidad a agregar"
+                  value={editForm.stockAgregar || ''}
+                  onChange={handleFormChange}
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+              {/* Imágenes */}
+              <div>
+                <label className="block font-medium text-sm">Imágenes</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {editForm.imagenes && editForm.imagenes.length > 0 ? (
+                    editForm.imagenes.map((img: any, idx: number) => (
+                      <img
+                        key={idx}
+                        src={
+                          img.url
+                            ? img.url.startsWith('http')
+                              ? img.url
+                              : `${BASE_URL}/${img.url}`
+                            : '/placeholder.png'
+                        }
+                        alt={`Imagen ${idx + 1}`}
+                        className="border rounded w-16 h-16 object-cover"
+                      />
+                    ))
+                  ) : (
+                    <span className="text-gray-400">No hay imágenes</span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm"
+                  // onClick={handleAddImage} // Implementar lógica de agregar imagen
+                >
+                  Agregar Imagen
+                </button>
+              </div>
+              <button
+                type="button"
+                className="bg-blue-600 mt-2 px-4 py-2 rounded w-full text-white"
+                onClick={handleSave}
+              >
+                Guardar Producto
+              </button>
+            </form>
+          </div>
         </div>
       )}
-
       {/* Cards de productos */}
       <div className="md:flex-wrap gap-3 grid grid-cols-1 md:grid-cols-3 p-4">
         {loading ? (
@@ -195,12 +469,13 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                 >
                   <FaInfoCircle size={20} />
                 </Link>
-                <Link
-                  to={`/stock/${item.id}/editar`}
+                <button
                   className="ml-4 text-[#F4B1C7] hover:text-[#E38AAA]"
+                  onClick={() => handleEditClick(item)}
+                  title="Editar"
                 >
                   <FaEdit size={20} />
-                </Link>
+                </button>
               </div>
               <Carousel showThumbs={false} infiniteLoop className="w-full h-36">
                 {item.imagenes && item.imagenes.length > 0

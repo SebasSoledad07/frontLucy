@@ -61,36 +61,43 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
     fetchProductos();
   }, [categoriaId, selectedCategoria, selectedSubCategoria, BASE_URL, token]);
 
-  // Fetch categorias without authorization
+  // Fetch categorias with axios and Authorization header (like RegistrarProducto)
   useEffect(() => {
     const fetchCategorias = async () => {
       setCategoriasLoading(true);
       try {
-        const response = await fetch(`${BASE_URL}/api/categorias`);
-        const data = await response.json();
-        setCategorias(data.data || []);
+        const response = await axios.get(`${BASE_URL}/api/categorias`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        // RegistrarProducto expects response.data to be the array
+        setCategorias(response.data);
       } catch (err) {
         setCategorias([]);
       } finally {
         setCategoriasLoading(false);
       }
     };
-    fetchCategorias();
-  }, [BASE_URL]);
+    if (token) fetchCategorias();
+  }, [BASE_URL, token]);
 
-  // Fetch all subcategorias on mount (not just for selectedCategoria)
+  // Fetch subcategorias: if selectedCategoria, fetch only those, else fetch all (like RegistrarProducto)
   useEffect(() => {
     const fetchSubCategorias = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/api/subcategorias`);
-        const data = await response.json();
-        setSubCategorias(data.data || []);
+        let url = `${BASE_URL}/api/subcategorias`;
+        if (selectedCategoria) {
+          url = `${BASE_URL}/api/subcategorias/categoria/${selectedCategoria}`;
+        }
+        const response = await axios.get(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSubCategorias(response.data);
       } catch (err) {
         setSubCategorias([]);
       }
     };
-    fetchSubCategorias();
-  }, [BASE_URL]);
+    if (token) fetchSubCategorias();
+  }, [BASE_URL, token, selectedCategoria]);
 
   // Filtering logic
   const filteredProductos = productos.filter((producto) => {

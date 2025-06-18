@@ -163,10 +163,52 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
     }));
   };
 
-  // Save changes (for now, just close modal)
-  const handleSave = () => {
-    // Here you would update the producto/variante in your backend or state
-    setEditModalOpen(false);
+  // Save changes (PUT to backend with FormData)
+  const handleSave = async () => {
+    if (!selectedProducto) return;
+    const formData = new FormData();
+    formData.append('nombre', editForm.nombre || '');
+    formData.append('subcategoriaId', editForm.subcategoriaId || '');
+    formData.append('descripcion', editForm.descripcion || '');
+    formData.append('activo', editForm.activo ? 'true' : 'false');
+    formData.append('tallaId', editForm.variante?.talla?.id || '');
+    formData.append('precioCompra', editForm.variante?.precioCompra || '');
+    formData.append('precioVenta', editForm.variante?.precioVenta || '');
+    formData.append('observaciones', editForm.observaciones || '');
+    // --- Stock logic removed: do not send agregarStock ---
+    // Images: only append if new File(s) are present
+    if (editForm.imagenes && Array.isArray(editForm.imagenes)) {
+      editForm.imagenes.forEach((img: any) => {
+        if (img instanceof File) {
+          formData.append('imagenes', img);
+        }
+      });
+    }
+    // Images to delete
+    if (
+      editForm.imagenesEliminadas &&
+      Array.isArray(editForm.imagenesEliminadas)
+    ) {
+      editForm.imagenesEliminadas.forEach((id: any) => {
+        formData.append('imagenesEliminadas', id);
+      });
+    }
+    try {
+      await axios.put(
+        `${BASE_URL}/api/productos/${selectedProducto.id}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // Do not set Content-Type for FormData
+          },
+        },
+      );
+      setEditModalOpen(false);
+      // Optionally, refresh product list here
+    } catch (error) {
+      alert('Error al actualizar el producto');
+    }
   };
 
   return (
@@ -342,26 +384,6 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                   className="p-2 border rounded w-full"
                 />
               </div>
-              {/* Stock */}
-              <div>
-                <label className="block font-medium text-sm">Stock</label>
-                <input
-                  type="number"
-                  name="stockActual"
-                  placeholder="Ingrese el stock"
-                  value={editForm.variante?.stockActual || ''}
-                  onChange={(e) =>
-                    setEditForm((prev: any) => ({
-                      ...prev,
-                      variante: {
-                        ...prev.variante,
-                        stockActual: e.target.value,
-                      },
-                    }))
-                  }
-                  className="p-2 border rounded w-full"
-                />
-              </div>
               {/* ¿Producto visible? */}
               <div className="flex items-center">
                 <input
@@ -397,20 +419,6 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                   name="observaciones"
                   placeholder="Ingrese observaciones"
                   value={editForm.observaciones || ''}
-                  onChange={handleFormChange}
-                  className="p-2 border rounded w-full"
-                />
-              </div>
-              {/* Stock a agregar */}
-              <div>
-                <label className="block font-medium text-sm">
-                  Stock a agregar
-                </label>
-                <input
-                  type="number"
-                  name="stockAgregar"
-                  placeholder="Ingrese la cantidad a agregar"
-                  value={editForm.stockAgregar || ''}
                   onChange={handleFormChange}
                   className="p-2 border rounded w-full"
                 />
@@ -488,30 +496,24 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                 {item.imagenes && item.imagenes.length > 0
                   ? item.imagenes.map((imagen: any, idx: number) => {
                       let imageUrl = '/placeholder.png';
-                      if (typeof imagen === 'object' && imagen.url) {
-                        if (
-                          imagen.url.startsWith('data:image/jpeg;base64,') ||
-                          imagen.url.startsWith('/9j/') // common base64 JPG prefix
-                        ) {
-                          // If already a data URL or raw base64, use as is
-                          imageUrl = imagen.url.startsWith(
-                            'data:image/jpeg;base64,',
-                          )
-                            ? imagen.url
-                            : `data:image/jpeg;base64,${imagen.url}`;
-                        } else {
-                          // If url is relative, prepend BASE_URL
+                      if (typeof imagen === 'object') {
+                        if (imagen.data) {
+                          imageUrl = `data:image/jpeg;base64,${imagen.data}`;
+                        } else if (imagen.url) {
                           imageUrl = imagen.url.startsWith('http')
                             ? imagen.url
-                            : `${BASE_URL}/${imagen.url}`;
+                            : `${imagen.url}`;
                         }
                       }
                       return (
                         <div key={idx}>
                           <img
                             src={imageUrl}
-                            alt={`${item.nombre} - ${idx + 1}`}
+                            alt={`Imagen ${idx + 1}`}
                             className="rounded-md w-full h-36 object-cover"
+                            onError={(e) =>
+                              (e.currentTarget.src = '/placeholder.png')
+                            }
                           />
                         </div>
                       );

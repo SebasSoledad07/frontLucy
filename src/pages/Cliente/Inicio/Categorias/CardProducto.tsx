@@ -1,6 +1,5 @@
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
 
-import { FaInfoCircle, FaEdit } from 'react-icons/fa';
 import { Carousel } from 'react-responsive-carousel';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -119,22 +118,6 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                 key={variante.id || `${item.id}-fallback`}
                 className="bg-[#FFFFFF] shadow-md p-4 border border-[#F4B1C7] rounded-lg"
               >
-                <div className="flex justify-end items-center">
-                  <Link
-                    to={`/${modulo}/stock/${item.id}/informacion`}
-                    className="text-[#B199E1] hover:text-[#A27FD6]"
-                  >
-                    <FaInfoCircle size={20} />
-                  </Link>
-                  {modulo === 'admin' && (
-                    <Link
-                      to={`/${modulo}/stock/${item.id}/editar`}
-                      className="ml-4 text-[#F4B1C7] hover:text-[#E38AAA]"
-                    >
-                      <FaEdit size={20} />
-                    </Link>
-                  )}
-                </div>
                 <Carousel
                   showThumbs={false}
                   infiniteLoop
@@ -143,21 +126,24 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                   {item.imagenes && item.imagenes.length > 0
                     ? item.imagenes.map((imagen: any, idx: number) => {
                         let imageUrl = '/placeholder.png';
-                        // if (typeof imagen === 'object') {
-                        //   if (imagen.data) {
-                        //     imageUrl = `data:image/jpeg;,${imagen.data}`;
-                        //   } else if (imagen.url) {
-                        //     imageUrl = imagen.url.startsWith('http')
-                        //       ? imagen.url
-                        //       : `${BASE_URL}/${imagen.url}`;
-                        //   }
-                        // }
+                        if (typeof imagen === 'object') {
+                          if (imagen.data) {
+                            imageUrl = `data:image/jpeg;base64,${imagen.data}`;
+                          } else if (imagen.url) {
+                            imageUrl = imagen.url.startsWith('http')
+                              ? imagen.url
+                              : `${imagen.url}`;
+                          }
+                        }
                         return (
                           <div key={idx}>
                             <img
                               src={imageUrl}
                               alt={`${item.nombre} - ${idx + 1}`}
                               className="rounded-md w-full h-36 object-cover"
+                              onError={(e) =>
+                                (e.currentTarget.src = '/placeholder.png')
+                              }
                             />
                           </div>
                         );

@@ -1,7 +1,6 @@
 import { Carousel } from 'react-responsive-carousel';
 import { useNavigate } from 'react-router-dom';
 import { BiSolidLike } from 'react-icons/bi';
-import { FaEdit } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
@@ -180,26 +179,24 @@ const ProductList: React.FC<{
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: (index + idx) * 0.05 }}
               >
-                {/* Edit button */}
-                <button
-                  className="top-2 right-2 z-10 absolute bg-white hover:bg-gray-100 shadow p-2 rounded-full"
-                  onClick={() => handleEditClick(producto, variante)}
-                  title="Editar"
-                >
-                  <FaEdit className="text-blue-600" />
-                </button>
                 {producto.imagenes?.length > 0 ? (
                   <Carousel
                     showThumbs={false}
                     infiniteLoop
                     className="rounded-lg"
-                    onClickItem={() =>
-                      navigate(`/cliente/producto/${producto.id}/informacion`)
-                    }
+                    // Removed onClickItem for informacion routing
                   >
                     {producto.imagenes.map((imagen: any, i: number) => {
                       let imageUrl = '/placeholder.png';
-
+                      if (typeof imagen === 'object') {
+                        if (imagen.data) {
+                          imageUrl = `data:image/jpeg;base64,${imagen.data}`;
+                        } else if (imagen.url) {
+                          imageUrl = imagen.url.startsWith('http')
+                            ? imagen.url
+                            : `${imagen.url}`;
+                        }
+                      }
                       return (
                         <div
                           key={i}
@@ -211,6 +208,9 @@ const ProductList: React.FC<{
                             width={300}
                             height={300}
                             className="w-full h-full object-cover"
+                            onError={(e) =>
+                              (e.currentTarget.src = '/placeholder.png')
+                            }
                           />
                         </div>
                       );
@@ -227,9 +227,7 @@ const ProductList: React.FC<{
                 )}
                 <div className="p-4">
                   <div
-                    onClick={() =>
-                      navigate(`/cliente/producto/${producto.id}/informacion`)
-                    }
+                    // Removed onClick for informacion routing
                     className="cursor-pointer"
                   >
                     <h3 className="mb-2 font-semibold text-lg">

@@ -9,6 +9,7 @@ import ReportePedidos from './pdf/ReportePedidos';
 import PedidoItemsModal from './PedidoItemsModal';
 import FacturaPDF from './pdf/FacturaPDF';
 
+
 // Import a generic modal (assumed to exist)
 
 const ESTADO_PEDIDO_LABELS: Record<string, string> = {
@@ -42,6 +43,41 @@ const Pedidos = () => {
       return nombreCompleto.includes(clienteFiltro.toLowerCase());
     })
     .sort((a, b) => b.id - a.id);
+
+  // Add handlers for sending and delivering pedidos with auth header
+  const handleEnviarPedido = async (pedidoId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/pedidos/${pedidoId}/enviar`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token ? `Bearer ${token}` : '',
+        },
+      });
+      if (!response.ok) throw new Error('Error al enviar el pedido');
+      fetchPedidos(estadoFiltro || undefined);
+    } catch (error) {
+      alert('No se pudo enviar el pedido.');
+    }
+  };
+
+  const handleEntregarPedido = async (pedidoId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/pedidos/${pedidoId}/entregar`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token ? `Bearer ${token}` : '',
+        },
+      });
+      if (!response.ok) throw new Error('Error al entregar el pedido');
+      fetchPedidos(estadoFiltro || undefined);
+    } catch (error) {
+      alert('No se pudo entregar el pedido.');
+    }
+  };
 
   return (
     <div className="mx-auto container">
@@ -105,6 +141,10 @@ const Pedidos = () => {
               <th className="px-4 py-3 border-b font-medium text-gray-700 text-sm text-left">
                 Responsable
               </th>
+              {/* Acciones column header */}
+              <th className="px-4 py-3 border-b font-medium text-gray-700 text-sm text-left">
+                Acciones
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -159,6 +199,23 @@ const Pedidos = () => {
                   ) : (
                     <span className="text-red-500">Sin responsable</span>
                   )}
+                </td>
+                {/* Acciones cell */}
+                <td className="space-x-2 px-4 py-3 border-b text-gray-900 text-sm">
+                  <button
+                    className="bg-blue-500 hover:bg-blue-600 disabled:opacity-50 px-2 py-1 rounded text-white"
+                    onClick={() => handleEnviarPedido(pedido.id)}
+                    disabled={pedido.estado !== 'PENDIENTE'}
+                  >
+                    Enviar pedido
+                  </button>
+                  <button
+                    className="bg-green-500 hover:bg-green-600 disabled:opacity-50 px-2 py-1 rounded text-white"
+                    onClick={() => handleEntregarPedido(pedido.id)}
+                    disabled={pedido.estado !== 'ENVIADO'}
+                  >
+                    Entregar
+                  </button>
                 </td>
               </tr>
             ))}

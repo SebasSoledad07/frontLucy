@@ -54,6 +54,39 @@ const PedidoItemsModal: React.FC<PedidoItemsModalProps> = ({
             ))}
           </tbody>
         </table>
+        {/* Datos del pedido debajo de la tabla */}
+        {pedido.factura && pedido.factura.cliente && (
+          <div className="bg-gray-50 mt-4 p-4 border rounded">
+            <h3 className="mb-2 font-semibold text-base">Datos del Cliente</h3>
+            <div className="gap-2 grid grid-cols-1 sm:grid-cols-2 text-sm">
+              <div>
+                <span className="font-medium">Nombre:</span>{' '}
+                {pedido.factura.cliente.nombre}{' '}
+                {pedido.factura.cliente.apellido}
+              </div>
+              <div>
+                <span className="font-medium">Documento:</span>{' '}
+                {pedido.factura.cliente.numeroDocumento}
+              </div>
+              <div>
+                <span className="font-medium">Email:</span>{' '}
+                {pedido.factura.cliente.email}
+              </div>
+              <div>
+                <span className="font-medium">Teléfono:</span>{' '}
+                {pedido.factura.cliente.telefono}
+              </div>
+              <div className="sm:col-span-2">
+                <span className="font-medium">Dirección:</span>{' '}
+                {pedido.factura.cliente.direccionEnvio}
+              </div>
+              <div>
+                <span className="font-medium">Código Postal:</span>{' '}
+                {pedido.factura.cliente.codigoPostal}
+              </div>
+            </div>
+          </div>
+        )}
         <div className="flex justify-end">
           <button
             className="bg-blue-500 hover:bg-blue-600 mt-2 px-4 py-2 rounded text-white"

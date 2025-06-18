@@ -1,28 +1,29 @@
 import { RouteObject } from 'react-router-dom';
+
+import InfoProductoCliente from '../pages/Cliente/Productos/informacion/InfoProductoCliente';
+import PreguntasFrecuentres from '../pages/Cliente/Preguntas/PreguntasFrecuentres';
+import InformacionProducto from '../pages/stock/informacion/InformacionProducto';
+import RegistrarVendedor from '../pages/Vendedor/registrar/RegistrarVendedor';
+import RegistrarProducto from '../pages/stock/registrar/RegistrarProducto';
+import RegistrarCliente from '../pages/Authentication/RegistrarCliente';
+import Estadisiticas from '../pages/Admin/Estadisticas/Estadisiticas';
+import EditarVendedor from '../pages/Vendedor/editar/EditarVendedor';
+import ResetPassword from '../pages/Authentication/ResetPassword';
+import EditarProducto from '../pages/stock/editar/EditarProducto';
+import Productos from '../pages/Cliente/Productos/Productos';
+import PedidoEmpleado from '../pages/Pedidos/Pedido/Pedido';
+import LoginAdmin from '../pages/Authentication/LoginAdmin';
+import PedidoCliente from '../pages/Cliente/Pedido/Pedido';
+import Vendedores from '../pages/Vendedor/Vendedores';
+import Checkout from '../pages/Cliente/Pago/Checkout';
+import ECommerce from '../pages/Dashboard/ECommerce';
+import Login from '../pages/Authentication/Login';
 import PageTitle from '../components/PageTitle';
+import Pedidos from '../pages/Pedidos/Pedidos';
 import Inicio from '../pages/Cliente/Inicio';
 import PQR from '../pages/Cliente/PQR/PQR';
-import PreguntasFrecuentres from '../pages/Cliente/Preguntas/PreguntasFrecuentres';
-import PedidoCliente from '../pages/Cliente/Pedido/Pedido';
-import Checkout from '../pages/Cliente/Pago/Checkout';
-import InfoProductoCliente from '../pages/Cliente/Productos/informacion/InfoProductoCliente';
-import Productos from '../pages/Cliente/Productos/Productos';
-import ResetPassword from '../pages/Authentication/ResetPassword';
-import Login from '../pages/Authentication/Login';
-
-import LoginAdmin from '../pages/Authentication/LoginAdmin';
-import ECommerce from '../pages/Dashboard/ECommerce';
-import RegistrarProducto from '../pages/stock/registrar/RegistrarProducto';
-import EditarProducto from '../pages/stock/editar/EditarProducto';
-import InformacionProducto from '../pages/stock/informacion/InformacionProducto';
-import Vendedores from '../pages/Vendedor/Vendedores';
-import RegistrarVendedor from '../pages/Vendedor/registrar/RegistrarVendedor';
-import EditarVendedor from '../pages/Vendedor/editar/EditarVendedor';
-import Pedidos from '../pages/Pedidos/Pedidos';
-import PedidoEmpleado from '../pages/Pedidos/Pedido/Pedido';
-import Perfil from '../pages/Perfil';
-import Estadisiticas from '../pages/Admin/Estadisticas/Estadisiticas';
 import Stock from '../pages/stock/Stock';
+import Perfil from '../pages/Perfil';
 
 export const routes: RouteObject[] = [
   {
@@ -294,6 +295,15 @@ export const routes: RouteObject[] = [
       <>
         <PageTitle title="Lucy Mundo de Pijamas PQR " />
         <PQR />
+      </>
+    ),
+  },
+  {
+    path: '/cliente/registrar-cliente',
+    element: (
+      <>
+        <PageTitle title="Registrar Cliente" />
+        <RegistrarCliente />
       </>
     ),
   },

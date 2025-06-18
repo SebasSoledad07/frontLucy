@@ -14,6 +14,12 @@ import AuthLayout from './AuthLayout'; // Asegúrate de importar correctamente
 
 // Asegúrate de importar correctamente
 
+// Asegúrate de importar correctamente
+
+// Asegúrate de importar correctamente
+
+// Asegúrate de importar correctamente
+
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -138,6 +144,14 @@ function Login() {
             >
               ¿Olvidaste tu contraseña?
             </Link>
+            <div className="mt-4 text-center">
+              <Link
+                to="/cliente/registrar-cliente"
+                className="ml-2 text-primary hover:underline"
+              >
+                ¿No tienes cuenta? Regístrate
+              </Link>
+            </div>
           </form>
         </div>
       </div>

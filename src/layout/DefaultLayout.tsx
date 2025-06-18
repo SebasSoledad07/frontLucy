@@ -1,5 +1,5 @@
-import { useState, ReactNode } from 'react';
 import { Outlet } from 'react-router-dom';
+import { useState } from 'react';
 
 import { UsuariosProvider } from '../Context/UsuariosContext';
 import { ProductoProvider } from '../Context/ProductoContext';
@@ -8,13 +8,7 @@ import { UserProvider } from '../Context/UserContext';
 import Sidebar from '../components/Sidebar/index';
 import Header from '../components/Header/index';
 
-// 👈 importante
-
-interface DefaultLayoutProps {
-  children: ReactNode;
-}
-
-const DefaultLayout = ({ children }: DefaultLayoutProps) => {
+const DefaultLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -36,7 +30,6 @@ const DefaultLayout = ({ children }: DefaultLayoutProps) => {
                   />
                   <main>
                     <div className="mx-auto p-4 md:p-6 2xl:p-10 max-w-screen-2xl">
-                      {children}
                       <Outlet />
                       {/* 👈 Aquí renderizan las rutas hijas */}
                     </div>

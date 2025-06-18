@@ -213,7 +213,14 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
     formData.append('precioVenta', editForm.variante?.precioVenta || '');
     formData.append('observaciones', editForm.observaciones || '');
     // Agregar Stock
-    formData.append('agregarStock', agregarStock || '0');
+    const agregarStockValue = Number(agregarStock);
+    if (!isNaN(agregarStockValue) && agregarStock !== '') {
+      formData.append('agregarStock', agregarStockValue.toString());
+    }
+    // Debug: log FormData values
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
+    }
     // Nuevas imágenes
     nuevasImagenes.forEach((img) => {
       formData.append('imagenes', img);
@@ -422,7 +429,12 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                   name="agregarStock"
                   placeholder="Cantidad a agregar"
                   value={agregarStock}
-                  onChange={(e) => setAgregarStock(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*$/.test(value)) {
+                      setAgregarStock(value);
+                    }
+                  }}
                   className="p-2 border rounded w-full"
                 />
               </div>

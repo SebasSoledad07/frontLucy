@@ -121,6 +121,22 @@ const Drawer: FC<DrawerProps> = ({ isOpen, onClose }) => {
           checkout.open(function (result) {
             // You can handle the result here
             console.log('Transaction result:', result);
+            if (result && result.transaction) {
+              const transactionId = result.transaction.id;
+              const status = result.transaction.status;
+              // Example: show a message or handle success/failure
+              if (status === 'APPROVED') {
+                alert(`¡Pago exitoso! ID: ${transactionId}`);
+                // Optionally: clearCart();
+              } else if (status === 'DECLINED') {
+                alert(`Pago rechazado. ID: ${transactionId}`);
+              } else {
+                alert(
+                  `Estado de la transacción: ${status} (ID: ${transactionId})`,
+                );
+              }
+              // Optionally: send transactionId to your backend for verification
+            }
           });
         } catch (e) {
           setWompiError('Error al abrir el widget de Wompi.');

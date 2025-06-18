@@ -6,7 +6,10 @@ import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { usePedidoContext } from '../../Context/PedidoContext';
 import { useUserContext } from '../../Context/UserContext';
 import ReportePedidos from './pdf/ReportePedidos';
+import PedidoItemsModal from './PedidoItemsModal';
 import FacturaPDF from './pdf/FacturaPDF';
+
+// Import a generic modal (assumed to exist)
 
 const ESTADO_PEDIDO_LABELS: Record<string, string> = {
   PENDIENTE: 'Pendiente',
@@ -20,6 +23,8 @@ const Pedidos = () => {
   const { pedidos, fetchPedidos } = usePedidoContext();
   const [estadoFiltro, setEstadoFiltro] = useState('');
   const [clienteFiltro, setClienteFiltro] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [selectedPedido, setSelectedPedido] = useState<any | null>(null);
 
   // Fetch pedidos when estadoFiltro changes
   useEffect(() => {
@@ -97,6 +102,9 @@ const Pedidos = () => {
               <th className="px-4 py-3 border-b font-medium text-gray-700 text-sm text-left">
                 Factura
               </th>
+              <th className="px-4 py-3 border-b font-medium text-gray-700 text-sm text-left">
+                Responsable
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -133,22 +141,36 @@ const Pedidos = () => {
                     : 'N/A'}
                 </td>
                 <td className="px-4 py-3 border-b text-gray-900 text-sm">
-                  <Link
-                    to={`/${modulo}/pedido/informacion/${
-                      pedido.factura?.referencia || pedido.id
-                    }`}
+                  <button
+                    onClick={() => {
+                      setSelectedPedido(pedido);
+                      setShowModal(true);
+                    }}
                   >
                     <FaInfoCircle className="w-5 h-5 text-blue-500 hover:text-blue-700 cursor-pointer" />
-                  </Link>
+                  </button>
                 </td>
                 <td className="px-4 py-3 border-b text-gray-900 text-sm">
                   <FacturaPDF factura={pedido} />
+                </td>
+                <td className="px-4 py-3 border-b text-gray-900 text-sm">
+                  {pedido.responsable ? (
+                    `${pedido.responsable.nombre} ${pedido.responsable.apellido}`
+                  ) : (
+                    <span className="text-red-500">Sin responsable</span>
+                  )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {/* Modal for showing pedido items */}
+      <PedidoItemsModal
+        open={showModal && !!selectedPedido}
+        onClose={() => setShowModal(false)}
+        pedido={selectedPedido}
+      />
     </div>
   );
 };

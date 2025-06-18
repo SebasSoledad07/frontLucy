@@ -56,6 +56,7 @@ export const PedidoProvider: React.FC<{ children: ReactNode }> = ({
       const response = await axios.get(url, { headers: getAuthHeaders() });
       const data = response.data;
       setPedidos(Array.isArray(data) ? data : []);
+      console.log('Fetched pedidos:', data); // Log fetched pedidos
     } catch (error) {
       console.error('Error fetching pedidos:', error);
       setPedidos([]);

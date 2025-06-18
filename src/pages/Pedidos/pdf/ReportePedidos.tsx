@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
 
 interface Producto {
   cantidad: number;
@@ -136,88 +136,85 @@ const ReportePedidos: React.FC<ReportePedidosProps> = ({ pedidos }) => {
 
   return (
     <div>
-        <p className='mb-3 text-semibold '>
-            Para generar un <strong> informe</strong>, seleccione un filtro y un rango de fecha (dia , semana o mes).</p>
-    <div className="flex justify-between">
-      {/* Selector de filtro */}
- 
-      <div className="mb-4">
-        <label htmlFor="filtro" className="mr-2">
-          Seleccionar filtro:
-        </label>
-        <select
-          id="filtro"
-          value={filtro}
-          onChange={(e) =>
-            setFiltro(e.target.value as 'diario' | 'semanal' | 'mensual')
-          }
-          className="border rounded px-2 py-1"
+      {/* <p className="mb-3 text-semibold">
+        Para generar un <strong> informe</strong>, seleccione un filtro y un
+        rango de fecha (dia , semana o mes).
+      </p> */}
+      <div className="flex justify-between">
+        {/* Selector de filtro */}
+        <div className="mb-4">
+          <label htmlFor="filtro" className="mr-2">
+            Seleccionar filtro:
+          </label>
+          <select
+            id="filtro"
+            value={filtro}
+            onChange={(e) =>
+              setFiltro(e.target.value as 'diario' | 'semanal' | 'mensual')
+            }
+            className="px-2 py-1 border rounded"
+          >
+            <option value="diario">Diario</option>
+            <option value="semanal">Semanal</option>
+            <option value="mensual">Mensual</option>
+          </select>
+        </div>
+        {/* Inputs dinámicos según el filtro */}
+        {filtro === 'diario' && (
+          <div className="mb-4">
+            <label htmlFor="fecha" className="mr-2">
+              Seleccionar fecha:
+            </label>
+            <input
+              type="date"
+              id="fecha"
+              value={fechaSeleccionada}
+              onChange={(e) => setFechaSeleccionada(e.target.value)}
+              className="px-2 py-1 border rounded"
+            />
+          </div>
+        )}
+        {filtro === 'semanal' && (
+          <div className="mb-4">
+            <label htmlFor="semana" className="mr-2">
+              Seleccionar semana:
+            </label>
+            <input
+              type="week"
+              id="semana"
+              value={semanaSeleccionada}
+              onChange={(e) => setSemanaSeleccionada(e.target.value)}
+              className="px-2 py-1 border rounded"
+            />
+          </div>
+        )}
+        {filtro === 'mensual' && (
+          <div className="mb-4">
+            <label htmlFor="mes" className="mr-2">
+              Seleccionar mes:
+            </label>
+            <input
+              type="month"
+              id="mes"
+              value={mesSeleccionado}
+              onChange={(e) => setMesSeleccionado(e.target.value)}
+              className="px-2 py-1 border rounded"
+            />
+          </div>
+        )}
+        {/* Botón para generar PDF
+        <button
+          className={`block w-auto py-1 mb-3 px-1 font-medium text-sm text-center active:shadow-none rounded-lg shadow ${
+            filtroValido
+              ? 'bg-blue-500 text-white hover:bg-blue-600'
+              : 'bg-gray-300 text-gray-500'
+          }`}
+          onClick={generarPDF}
+          disabled={!filtroValido}
         >
-          <option value="diario">Diario</option>
-          <option value="semanal">Semanal</option>
-          <option value="mensual">Mensual</option>
-        </select>
+          Descargar Informe
+        </button> */}
       </div>
-
-      {/* Inputs dinámicos según el filtro */}
-      {filtro === 'diario' && (
-        <div className="mb-4">
-          <label htmlFor="fecha" className="mr-2">
-            Seleccionar fecha:
-          </label>
-          <input
-            type="date"
-            id="fecha"
-            value={fechaSeleccionada}
-            onChange={(e) => setFechaSeleccionada(e.target.value)}
-            className="border rounded px-2 py-1"
-          />
-        </div>
-      )}
-
-      {filtro === 'semanal' && (
-        <div className="mb-4">
-          <label htmlFor="semana" className="mr-2">
-            Seleccionar semana:
-          </label>
-          <input
-            type="week"
-            id="semana"
-            value={semanaSeleccionada}
-            onChange={(e) => setSemanaSeleccionada(e.target.value)}
-            className="border rounded px-2 py-1"
-          />
-        </div>
-      )}
-
-      {filtro === 'mensual' && (
-        <div className="mb-4">
-          <label htmlFor="mes" className="mr-2">
-            Seleccionar mes:
-          </label>
-          <input
-            type="month"
-            id="mes"
-            value={mesSeleccionado}
-            onChange={(e) => setMesSeleccionado(e.target.value)}
-            className="border rounded px-2 py-1"
-          />
-        </div>
-      )}
-
-      {/* Botón para generar PDF */}
-      <button
-        className={`block w-auto py-1 mb-3 px-1 font-medium text-sm text-center active:shadow-none rounded-lg shadow ${
-          filtroValido
-            ? 'bg-blue-500 text-white hover:bg-blue-600'
-            : 'bg-gray-300 text-gray-500'
-        }`}
-        onClick={generarPDF}
-        disabled={!filtroValido}
-      >
-        Descargar Informe
-      </button>
-    </div>
     </div>
   );
 };

@@ -195,15 +195,49 @@ const Drawer: FC<DrawerProps> = ({ isOpen, onClose }) => {
 
   const renderCarritoItem = (item) => {
     const producto = item.producto;
+    // Determine image source: base64 jpeg (from .data), url, or placeholder
+    let imgSrc = '/placeholder.png';
+    if (producto.imagenes && producto.imagenes.length > 0) {
+      const imagen = producto.imagenes[0];
+      if (imagen.data) {
+        imgSrc = `data:image/jpeg;base64,${imagen.data}`;
+      } else if (
+        imagen.url &&
+        (imagen.url.startsWith('data:image/jpeg;base64,') ||
+          imagen.url.startsWith('/9j/'))
+      ) {
+        imgSrc = imagen.url.startsWith('data:image/jpeg;base64,')
+          ? imagen.url
+          : `data:image/jpeg;base64,${imagen.url}`;
+      } else if (
+        imagen.name &&
+        (imagen.name.startsWith('data:image/jpeg;base64,') ||
+          imagen.name.startsWith('/9j/'))
+      ) {
+        imgSrc = imagen.name.startsWith('data:image/jpeg;base64,')
+          ? imagen.name
+          : `data:image/jpeg;base64,${imagen.name}`;
+      } else if (
+        imagen.url &&
+        (imagen.url.endsWith('.jpg') ||
+          imagen.url.endsWith('.jpeg') ||
+          imagen.url.startsWith('http'))
+      ) {
+        imgSrc = imagen.url;
+      } else if (
+        imagen.name &&
+        (imagen.name.endsWith('.jpg') ||
+          imagen.name.endsWith('.jpeg') ||
+          imagen.name.startsWith('http'))
+      ) {
+        imgSrc = imagen.name;
+      }
+    }
     return (
       <div key={producto.id} className="mt-3 mb-4">
         <div className="flex justify-between">
           <img
-            src={
-              producto.imagenes[0]?.url ||
-              producto.imagenes[0]?.name ||
-              '/placeholder.png'
-            }
+            src={imgSrc}
             alt={producto.nombre}
             className="rounded-lg w-30 h-30"
           />

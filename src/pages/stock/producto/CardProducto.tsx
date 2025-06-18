@@ -139,18 +139,55 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
   // Modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedProducto, setSelectedProducto] = useState<any>(null);
+  const [selectedVariante, setSelectedVariante] = useState<any>(null);
   const [editForm, setEditForm] = useState<any>({});
+  const [imagenesEliminadas, setImagenesEliminadas] = useState<any[]>([]);
+  const [nuevasImagenes, setNuevasImagenes] = useState<File[]>([]);
+  const [agregarStock, setAgregarStock] = useState('');
 
   // Open modal and set producto/variante
-  const handleEditClick = (producto: any) => {
+  const handleEditClick = async (producto: any, variante?: any) => {
     setSelectedProducto(producto);
-    setEditForm({
-      ...producto,
-      variante:
-        producto.variante && Array.isArray(producto.variante)
-          ? producto.variante[0]
-          : {},
-    });
+    setSelectedVariante(variante || null);
+    setImagenesEliminadas([]);
+    setNuevasImagenes([]);
+    setAgregarStock('');
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/api/productos/${producto.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const data = response.data;
+      let varianteToEdit = variante;
+      if (!varianteToEdit && data.variante && Array.isArray(data.variante)) {
+        varianteToEdit = data.variante[0];
+      }
+      setEditForm({
+        ...data,
+        categoriaId: data.subCategoria?.categoria?.id || '',
+        subcategoriaId: data.subCategoria?.id || '',
+        variante: varianteToEdit || {},
+        imagenes: data.imagenes || [],
+      });
+    } catch (e) {
+      let varianteToEdit = variante;
+      if (
+        !varianteToEdit &&
+        producto.variante &&
+        Array.isArray(producto.variante)
+      ) {
+        varianteToEdit = producto.variante[0];
+      }
+      setEditForm({
+        ...producto,
+        categoriaId: producto.subCategoria?.categoria?.id || '',
+        subcategoriaId: producto.subCategoria?.id || '',
+        variante: varianteToEdit || {},
+        imagenes: producto.imagenes || [],
+      });
+    }
     setEditModalOpen(true);
   };
 
@@ -175,24 +212,16 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
     formData.append('precioCompra', editForm.variante?.precioCompra || '');
     formData.append('precioVenta', editForm.variante?.precioVenta || '');
     formData.append('observaciones', editForm.observaciones || '');
-    // --- Stock logic removed: do not send agregarStock ---
-    // Images: only append if new File(s) are present
-    if (editForm.imagenes && Array.isArray(editForm.imagenes)) {
-      editForm.imagenes.forEach((img: any) => {
-        if (img instanceof File) {
-          formData.append('imagenes', img);
-        }
-      });
-    }
-    // Images to delete
-    if (
-      editForm.imagenesEliminadas &&
-      Array.isArray(editForm.imagenesEliminadas)
-    ) {
-      editForm.imagenesEliminadas.forEach((id: any) => {
-        formData.append('imagenesEliminadas', id);
-      });
-    }
+    // Agregar Stock
+    formData.append('agregarStock', agregarStock || '0');
+    // Nuevas imágenes
+    nuevasImagenes.forEach((img) => {
+      formData.append('imagenes', img);
+    });
+    // Imágenes a eliminar
+    imagenesEliminadas.forEach((id) => {
+      formData.append('imagenesEliminadas', id);
+    });
     try {
       await axios.put(
         `${BASE_URL}/api/productos/${selectedProducto.id}`,
@@ -200,7 +229,6 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            // Do not set Content-Type for FormData
           },
         },
       );
@@ -245,12 +273,13 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                 <select
                   name="categoriaId"
                   value={editForm.categoriaId || ''}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setEditForm((prev: any) => ({
                       ...prev,
                       categoriaId: e.target.value,
-                    }))
-                  }
+                      subcategoriaId: '', // reset subcategoria
+                    }));
+                  }}
                   className="p-2 border rounded w-full"
                 >
                   <option value="">Seleccione una categoría</option>
@@ -332,7 +361,6 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                   className="p-2 border rounded w-full"
                 >
                   <option value="">Seleccione una talla</option>
-                  {/* You may want to map available tallas here if you have them */}
                   {editForm.variante && editForm.variante.talla && (
                     <option value={editForm.variante.talla.id}>
                       {editForm.variante.talla.nombre}
@@ -384,6 +412,20 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                   className="p-2 border rounded w-full"
                 />
               </div>
+              {/* Agregar Stock */}
+              <div>
+                <label className="block font-medium text-sm">
+                  Agregar Stock
+                </label>
+                <input
+                  type="number"
+                  name="agregarStock"
+                  placeholder="Cantidad a agregar"
+                  value={agregarStock}
+                  onChange={(e) => setAgregarStock(e.target.value)}
+                  className="p-2 border rounded w-full"
+                />
+              </div>
               {/* ¿Producto visible? */}
               <div className="flex items-center">
                 <input
@@ -429,30 +471,76 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                 <div className="flex flex-wrap gap-2 mb-2">
                   {editForm.imagenes && editForm.imagenes.length > 0 ? (
                     editForm.imagenes.map((img: any, idx: number) => (
-                      <img
-                        key={idx}
-                        src={
-                          img.url
-                            ? img.url.startsWith('http')
-                              ? img.url
-                              : `${BASE_URL}/${img.url}`
-                            : '/placeholder.png'
-                        }
-                        alt={`Imagen ${idx + 1}`}
-                        className="border rounded w-16 h-16 object-cover"
-                      />
+                      <div key={idx} className="group relative">
+                        <img
+                          src={
+                            img.url
+                              ? img.url.startsWith('http')
+                                ? img.url
+                                : `${BASE_URL}/${img.url}`
+                              : '/placeholder.png'
+                          }
+                          alt={`Imagen ${idx + 1}`}
+                          className="border rounded w-16 h-h-64 object-cover"
+                        />
+                        <button
+                          type="button"
+                          className="top-0 right-0 absolute flex justify-center items-center bg-red-500 opacity-80 hover:opacity-100 rounded-full w-5 h-5 text-white text-xs"
+                          title="Eliminar imagen"
+                          onClick={() => {
+                            setImagenesEliminadas((prev) => [...prev, img.id]);
+                            setEditForm((prev: any) => ({
+                              ...prev,
+                              imagenes: prev.imagenes.filter(
+                                (_: any, i: number) => i !== idx,
+                              ),
+                            }));
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
                     ))
                   ) : (
                     <span className="text-gray-400">No hay imágenes</span>
                   )}
+                  {/* Nuevas imágenes preview */}
+                  {nuevasImagenes.map((file, idx) => (
+                    <div key={idx} className="group relative">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`Nueva Imagen ${idx + 1}`}
+                        className="border rounded w-16 h-64 object-cover"
+                      />
+                      <button
+                        type="button"
+                        className="top-0 right-0 absolute flex justify-center items-center bg-red-500 opacity-80 hover:opacity-100 rounded-full w-5 h-5 text-white text-xs"
+                        title="Eliminar imagen"
+                        onClick={() => {
+                          setNuevasImagenes((prev) =>
+                            prev.filter((_, i) => i !== idx),
+                          );
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                <button
-                  type="button"
-                  className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm"
-                  // onClick={handleAddImage} // Implementar lógica de agregar imagen
-                >
-                  Agregar Imagen
-                </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      setNuevasImagenes((prev) => [
+                        ...prev,
+                        ...Array.from(e.target.files),
+                      ]);
+                    }
+                  }}
+                  className="mb-2"
+                />
               </div>
               <button
                 type="button"
@@ -472,77 +560,109 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
         ) : error ? (
           <p className="text-red-500">{error}</p>
         ) : filteredProductos.length > 0 ? (
-          filteredProductos.map((item) => (
-            <div
-              key={item.id}
-              className="bg-[#FFFFFF] shadow-md p-4 border border-[#F4B1C7] rounded-lg"
-            >
-              <div className="flex justify-end items-center">
-                <Link
-                  to={`/stock/${item.id}/informacion`}
-                  className="text-[#B199E1] hover:text-[#A27FD6]"
+          filteredProductos.map((item) =>
+            (item.variante &&
+            Array.isArray(item.variante) &&
+            item.variante.length > 0
+              ? item.variante
+              : [{ ...item, isFallback: true }]
+            ).map((variante: any, idx: number) => (
+              <div
+                key={variante.id || `${item.id}-fallback`}
+                className="bg-[#FFFFFF] shadow-md p-4 border border-[#F4B1C7] rounded-lg"
+              >
+                <div className="flex justify-end items-center">
+                  <Link
+                    to={`/stock/${item.id}/informacion`}
+                    className="text-[#B199E1] hover:text-[#A27FD6]"
+                  >
+                    <FaInfoCircle size={20} />
+                  </Link>
+                  <button
+                    className="ml-4 text-[#F4B1C7] hover:text-[#E38AAA]"
+                    onClick={() => handleEditClick(item, variante)}
+                    title="Editar"
+                  >
+                    <FaEdit size={20} />
+                  </button>
+                </div>
+                <Carousel
+                  showThumbs={false}
+                  infiniteLoop
+                  className="w-full h-64"
                 >
-                  <FaInfoCircle size={20} />
-                </Link>
-                <button
-                  className="ml-4 text-[#F4B1C7] hover:text-[#E38AAA]"
-                  onClick={() => handleEditClick(item)}
-                  title="Editar"
-                >
-                  <FaEdit size={20} />
-                </button>
-              </div>
-              <Carousel showThumbs={false} infiniteLoop className="w-full h-36">
-                {item.imagenes && item.imagenes.length > 0
-                  ? item.imagenes.map((imagen: any, idx: number) => {
-                      let imageUrl = '/placeholder.png';
-                      if (typeof imagen === 'object') {
-                        if (imagen.data) {
-                          imageUrl = `data:image/jpeg;base64,${imagen.data}`;
-                        } else if (imagen.url) {
-                          imageUrl = imagen.url.startsWith('http')
-                            ? imagen.url
-                            : `${imagen.url}`;
+                  {item.imagenes && item.imagenes.length > 0
+                    ? item.imagenes.map((imagen: any, idx: number) => {
+                        let imageUrl = '/placeholder.png';
+                        if (typeof imagen === 'object') {
+                          if (imagen.data) {
+                            imageUrl = `data:image/jpeg;base64,${imagen.data}`;
+                          } else if (imagen.url) {
+                            imageUrl = imagen.url.startsWith('http')
+                              ? imagen.url
+                              : `${imagen.url}`;
+                          }
                         }
-                      }
-                      return (
-                        <div key={idx}>
+                        return (
+                          <div key={idx}>
+                            <img
+                              src={imageUrl}
+                              alt={`Imagen ${idx + 1}`}
+                              className="rounded-md w-full h-64 object-cover"
+                              onError={(e) =>
+                                (e.currentTarget.src = '/placeholder.png')
+                              }
+                            />
+                          </div>
+                        );
+                      })
+                    : [
+                        <div key="placeholder">
                           <img
-                            src={imageUrl}
-                            alt={`Imagen ${idx + 1}`}
-                            className="rounded-md w-full h-36 object-cover"
-                            onError={(e) =>
-                              (e.currentTarget.src = '/placeholder.png')
-                            }
+                            src="/placeholder.png"
+                            alt="Sin imagen"
+                            className="rounded-md w-full h-64 object-cover"
                           />
+                        </div>,
+                      ]}
+                </Carousel>
+                <div className="mt-4">
+                  <h3 className="font-semibold text-[#7A5B47] text-lg">
+                    {item.nombre.length > 15
+                      ? item.nombre.slice(0, 15) + '...'
+                      : item.nombre}
+                  </h3>
+                  {/* Variante info */}
+                  {!variante.isFallback && (
+                    <>
+                      <div className="flex justify-between mb-1 text-sm">
+                        <span className="font-bold">Talla:</span>
+                        <span>{variante.talla?.nombre}</span>
+                      </div>
+                      <div className="flex justify-between mb-1 text-sm">
+                        <span className="font-bold">Stock:</span>
+                        <span>{variante.stockActual}</span>
+                      </div>
+                      <div className="flex justify-between mb-1 text-sm">
+                        <span className="font-bold">Precio:</span>
+                        <span>{variante.precioVenta}</span>
+                      </div>
+                      {variante.porcentajeDescuento > 0 && (
+                        <div className="flex justify-between mb-1 text-sm">
+                          <span className="font-bold text-green-600">
+                            Descuento:
+                          </span>
+                          <span className="text-green-600">
+                            {variante.porcentajeDescuento}%
+                          </span>
                         </div>
-                      );
-                    })
-                  : [
-                      <div key="placeholder">
-                        <img
-                          src="/placeholder.png"
-                          alt="Sin imagen"
-                          className="rounded-md w-full h-36 object-cover"
-                        />
-                      </div>,
-                    ]}
-              </Carousel>
-              <div className="mt-4">
-                <h3 className="font-semibold text-[#7A5B47] text-lg">
-                  {item.nombre.length > 15
-                    ? item.nombre.slice(0, 15) + '...'
-                    : item.nombre}
-                </h3>
-                <div className="flex justify-between">
-                  <p className="text-[#7A5B47] text-sm">Visible:</p>
-                  <p className="text-[#7A5B47] text-sm">
-                    {item.activo ? 'Sí' : 'No'}
-                  </p>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
-            </div>
-          ))
+            )),
+          )
         ) : (
           <p className="text-[#7A5B47]">No se encontraron productos.</p>
         )}

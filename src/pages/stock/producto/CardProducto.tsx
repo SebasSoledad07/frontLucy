@@ -6,21 +6,19 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-import { useProductoContext } from '../../../Context/ProductoContext';
-import { useUserContext } from '../../../Context/UserContext';
+import { SubCategoria } from '../../../types/SubCategoria';
+import { Categoria } from '../../../types/Categoria';
 import { Producto } from '../../../types/producto';
 
 // Add categoriaId prop
 const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
-  // Only use context if not filtering by categoriaId
-  const { categorias } = useProductoContext
-    ? useProductoContext()
-    : { categorias: [] };
-  const { modulo } = useUserContext();
   const [selectedCategoria, setSelectedCategoria] = useState('');
   const [selectedSubCategoria, setSelectedSubCategoria] = useState('');
   const [productos, setProductos] = useState<Producto[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [subCategorias, setSubCategorias] = useState<SubCategoria[]>([]);
   const [loading, setLoading] = useState(false);
+  const [categoriasLoading, setCategoriasLoading] = useState(true);
   const [error, setError] = useState('');
 
   const BASE_URL =
@@ -37,6 +35,8 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
         let url = `${BASE_URL}/api/productos/todos`;
         if (categoriaId) {
           url = `${BASE_URL}/api/productos/categoria/${categoriaId}`;
+        } else if (selectedSubCategoria) {
+          url = `${BASE_URL}/api/productos/subcategoria/${selectedSubCategoria}`;
         } else if (selectedCategoria) {
           url = `${BASE_URL}/api/productos/categoria/${selectedCategoria}`;
         }
@@ -59,16 +59,53 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
       }
     };
     fetchProductos();
-  }, [categoriaId, selectedCategoria, BASE_URL, token]);
+  }, [categoriaId, selectedCategoria, selectedSubCategoria, BASE_URL, token]);
 
-  // Filter by subcategoria on the frontend
-  const filteredProductos = productos.filter((producto) => {
-    return (
-      selectedSubCategoria === '' ||
-      (producto.subCategoria &&
-        producto.subCategoria.id === parseInt(selectedSubCategoria))
-    );
-  });
+  // Fetch categorias without authorization
+  useEffect(() => {
+    const fetchCategorias = async () => {
+      setCategoriasLoading(true);
+      try {
+        const response = await axios.get(`${BASE_URL}/api/categorias`);
+        setCategorias(response.data.data || []);
+      } catch (err) {
+        setCategorias([]);
+      } finally {
+        setCategoriasLoading(false);
+      }
+    };
+    fetchCategorias();
+  }, [BASE_URL]);
+
+  // Fetch subcategorias without authorization
+  useEffect(() => {
+    const fetchSubCategorias = async () => {
+      if (!selectedCategoria) {
+        setSubCategorias([]);
+        return;
+      }
+      try {
+        const response = await axios.get(
+          `${BASE_URL}/api/subcategorias/categoria/${selectedCategoria}`,
+        );
+        setSubCategorias(response.data.data || []);
+      } catch (err) {
+        setSubCategorias([]);
+      }
+    };
+    fetchSubCategorias();
+  }, [selectedCategoria, BASE_URL]);
+
+  // Filtered categorias and subcategorias by nombre
+  const filteredCategorias = categorias.filter((c) =>
+    c.nombre.toLowerCase().includes(selectedCategoria.toLowerCase()),
+  );
+  const filteredSubCategorias = subCategorias.filter((s) =>
+    s.nombre.toLowerCase().includes(selectedSubCategoria.toLowerCase()),
+  );
+
+  // Remove frontend filter by subcategoria, since we now fetch by subcategoria
+  const filteredProductos = productos;
 
   // Only show selectors if not filtering by categoriaId
   const showSelectors = !categoriaId;
@@ -81,61 +118,46 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
       payload = { error: 'Invalid token' };
     }
   }
-  console.log('modulo:', modulo);
-  if (!modulo || modulo === 'null' || modulo === 'undefined') {
-    return (
-      <div className="p-4 text-[#7A5B47]">
-        Cargando información de usuario...
-        <br />
-        <span style={{ color: 'red' }}>DEBUG: modulo = {String(modulo)}</span>
-        <br />
-        <span style={{ color: 'red' }}>
-          DEBUG: payload = {JSON.stringify(payload)}
-        </span>
-      </div>
-    );
-  }
+
+  console.log('Categorias from context:', categorias);
+  console.log('Subcategorias fetched:', subCategorias);
 
   return (
     <div>
       {showSelectors && (
         <div className="flex md:flex-row flex-col gap-4 mb-4 ml-4">
-          <select
-            value={selectedCategoria}
-            onChange={(e) => {
-              setSelectedCategoria(e.target.value);
-              setSelectedSubCategoria('');
-            }}
-            className="bg-white p-2 border border-[#F4B1C7] rounded-md focus:ring-[#B695E0] focus:ring-2 text-[#7A5B47]"
-          >
-            <option value="">Todas las Categorías</option>
-            {categorias?.map((categoria) => (
-              <option key={categoria.id} value={categoria.id?.toString()}>
-                {categoria.nombre}
-              </option>
-            ))}
-          </select>
+          {categoriasLoading ? (
+            <span className="text-[#7A5B47]">Cargando categorías...</span>
+          ) : (
+            <select
+              value={selectedCategoria}
+              onChange={(e) => {
+                setSelectedCategoria(e.target.value);
+                setSelectedSubCategoria('');
+              }}
+              className="bg-white p-2 border border-[#F4B1C7] rounded-md focus:ring-[#B695E0] focus:ring-2 text-[#7A5B47]"
+            >
+              <option value="">Todas las Categorías</option>
+              {categorias.map((categoria) => (
+                <option key={categoria.id} value={categoria.id?.toString()}>
+                  {categoria.nombre}
+                </option>
+              ))}
+            </select>
+          )}
 
           <select
             value={selectedSubCategoria}
             onChange={(e) => setSelectedSubCategoria(e.target.value)}
             className="bg-white p-2 border border-[#F4B1C7] rounded-md focus:ring-[#B695E0] focus:ring-2 text-[#7A5B47]"
-            disabled={!selectedCategoria}
+            disabled={!selectedCategoria || subCategorias.length === 0}
           >
             <option value="">Todas las Subcategorías</option>
-            {selectedCategoria &&
-              categorias
-                ?.find(
-                  (categoria) => categoria.id === parseInt(selectedCategoria),
-                )
-                ?.subCategorias?.map((subCategoria) => (
-                  <option
-                    key={subCategoria.id}
-                    value={subCategoria.id.toString()}
-                  >
-                    {subCategoria.nombre}
-                  </option>
-                ))}
+            {subCategorias.map((subCategoria) => (
+              <option key={subCategoria.id} value={subCategoria.id.toString()}>
+                {subCategoria.nombre}
+              </option>
+            ))}
           </select>
         </div>
       )}
@@ -154,30 +176,39 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
             >
               <div className="flex justify-end items-center">
                 <Link
-                  to={`/${modulo}/stock/${item.id}/informacion`}
+                  to={`/stock/${item.id}/informacion`}
                   className="text-[#B199E1] hover:text-[#A27FD6]"
                 >
                   <FaInfoCircle size={20} />
                 </Link>
-                {modulo === 'admin' && (
-                  <Link
-                    to={`/${modulo}/stock/${item.id}/editar`}
-                    className="ml-4 text-[#F4B1C7] hover:text-[#E38AAA]"
-                  >
-                    <FaEdit size={20} />
-                  </Link>
-                )}
+                <Link
+                  to={`/stock/${item.id}/editar`}
+                  className="ml-4 text-[#F4B1C7] hover:text-[#E38AAA]"
+                >
+                  <FaEdit size={20} />
+                </Link>
               </div>
               <Carousel showThumbs={false} infiniteLoop className="w-full h-36">
                 {item.imagenes && item.imagenes.length > 0
                   ? item.imagenes.map((imagen: any, idx: number) => {
-                      // imagen.url is expected from producto_imagen table
                       let imageUrl = '/placeholder.png';
                       if (typeof imagen === 'object' && imagen.url) {
-                        // If url is relative, prepend BASE_URL
-                        imageUrl = imagen.url.startsWith('http')
-                          ? imagen.url
-                          : `${BASE_URL}/${imagen.url}`;
+                        if (
+                          imagen.url.startsWith('data:image/jpeg;base64,') ||
+                          imagen.url.startsWith('/9j/') // common base64 JPG prefix
+                        ) {
+                          // If already a data URL or raw base64, use as is
+                          imageUrl = imagen.url.startsWith(
+                            'data:image/jpeg;base64,',
+                          )
+                            ? imagen.url
+                            : `data:image/jpeg;base64,${imagen.url}`;
+                        } else {
+                          // If url is relative, prepend BASE_URL
+                          imageUrl = imagen.url.startsWith('http')
+                            ? imagen.url
+                            : `${BASE_URL}/${imagen.url}`;
+                        }
                       }
                       return (
                         <div key={idx}>
@@ -205,13 +236,6 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                     ? item.nombre.slice(0, 15) + '...'
                     : item.nombre}
                 </h3>
-                <div className="flex justify-between">
-                  <p className="text-[#7A5B47] text-sm">Stock:</p>
-                  <strong className="text-[#7A5B47] text-sm">
-                    {item.stock}{' '}
-                    {/* Assuming 'stock' is the correct property */}
-                  </strong>
-                </div>
                 <div className="flex justify-between">
                   <p className="text-[#7A5B47] text-sm">Visible:</p>
                   <p className="text-[#7A5B47] text-sm">

@@ -1,3 +1,4 @@
+import Administrativo from './Administrativo';
 import { Producto } from './producto';
 import Cliente from './Cliente';
 
@@ -66,5 +67,43 @@ export const crearProducto = async (form: Producto): Promise<any> => {
     throw new Error(error.error || 'Error al crear producto');
   }
 
+  return await response.json();
+};
+
+export const fetchPedidosCliente = async (token: string, clienteId: number) => {
+  const response = await fetch(`${API_URL}/api/pedidos/cliente/${clienteId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Error al obtener pedidos del cliente');
+  }
+  return await response.json();
+};
+
+export const fetchClienteById = async (
+  id: number,
+  token: string,
+): Promise<Cliente> => {
+  const response = await fetch(`${API_URL}/api/clientes/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) throw new Error('Cliente no encontrado');
+  return await response.json();
+};
+
+export const fetchAdministrativos = async (
+  token: string,
+): Promise<Administrativo[]> => {
+  const response = await fetch(`${API_URL}/api/administrativos`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok)
+    throw new Error('No se pudieron obtener los administrativos');
   return await response.json();
 };

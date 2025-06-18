@@ -1,84 +1,148 @@
+import { FaInfoCircle } from 'react-icons/fa';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { usePedidoContext } from '../../Context/PedidoContext';
-import { FaInfoCircle } from 'react-icons/fa';
 import { useUserContext } from '../../Context/UserContext';
-import FacturaPDF from './pdf/FacturaPDF';
 import ReportePedidos from './pdf/ReportePedidos';
+import FacturaPDF from './pdf/FacturaPDF';
+
+const ESTADO_PEDIDO_LABELS: Record<string, string> = {
+  PENDIENTE: 'Pendiente',
+  ENVIADO: 'Enviado',
+  ENTREGADO: 'Entregado',
+  CANCELADO: 'Cancelado',
+};
 
 const Pedidos = () => {
   const { modulo } = useUserContext();
-  const { pedidos } = usePedidoContext();
+  const { pedidos, fetchPedidos } = usePedidoContext();
+  const [estadoFiltro, setEstadoFiltro] = useState('');
+  const [clienteFiltro, setClienteFiltro] = useState('');
 
-  // Ordenar los pedidos en orden inverso por `id`
-  const pedidosOrdenados = [...pedidos].sort((a, b) => b.id - a.id);
+  // Fetch pedidos when estadoFiltro changes
+  useEffect(() => {
+    fetchPedidos(estadoFiltro || undefined);
+  }, [estadoFiltro]);
+
+  // Ordenar y filtrar los pedidos
+  const pedidosFiltrados = [...pedidos]
+    .filter((pedido) => {
+      if (!clienteFiltro) return true;
+      const cliente = pedido.factura?.cliente;
+      if (!cliente) return false;
+      const nombreCompleto =
+        `${cliente.nombre} ${cliente.apellido}`.toLowerCase();
+      return nombreCompleto.includes(clienteFiltro.toLowerCase());
+    })
+    .sort((a, b) => b.id - a.id);
 
   return (
-    <div className="container mx-auto ">
+    <div className="mx-auto container">
       <Breadcrumb pageName="Pedidos" lastPage="" />
-      <ReportePedidos pedidos={pedidos}/>
+      <div className="flex flex-wrap gap-4 mb-4">
+        <div>
+          <label className="block font-medium text-gray-700 text-sm">
+            Estado:
+          </label>
+          <select
+            className="px-2 py-1 border rounded"
+            value={estadoFiltro}
+            onChange={(e) => setEstadoFiltro(e.target.value)}
+          >
+            <option value="">Todos</option>
+            <option value="PENDIENTE">Pendiente</option>
+            <option value="ENVIADO">Enviado</option>
+            <option value="ENTREGADO">Entregado</option>
+            <option value="CANCELADO">Cancelado</option>
+          </select>
+        </div>
+        <div>
+          <label className="block font-medium text-gray-700 text-sm">
+            Cliente:
+          </label>
+          <input
+            className="px-2 py-1 border rounded"
+            type="text"
+            placeholder="Buscar cliente..."
+            value={clienteFiltro}
+            onChange={(e) => setClienteFiltro(e.target.value)}
+          />
+        </div>
+      </div>
+      <ReportePedidos pedidos={pedidosFiltrados} />
       <div className="max-w-full overflow-x-auto">
-        <table className="w-full table-auto border">
+        <table className="border w-full table-auto">
           <thead className="bg-gray-100">
-            <tr className="bg-gray-2 text-left dark:bg-meta-4">
-              <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 border-b">
+            <tr className="bg-gray-2 dark:bg-meta-4 text-left">
+              <th className="px-4 py-3 border-b font-medium text-gray-700 text-sm text-left">
                 ID
               </th>
-              <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 border-b">
+              <th className="px-4 py-3 border-b font-medium text-gray-700 text-sm text-left">
                 Cliente
               </th>
-              <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 border-b">
+              <th className="px-4 py-3 border-b font-medium text-gray-700 text-sm text-left">
                 Estado
               </th>
-              <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 border-b">
+              <th className="px-4 py-3 border-b font-medium text-gray-700 text-sm text-left">
                 Total
               </th>
-              <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 border-b">
+              <th className="px-4 py-3 border-b font-medium text-gray-700 text-sm text-left">
                 Fecha Registro
               </th>
-              <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 border-b">
+              <th className="px-4 py-3 border-b font-medium text-gray-700 text-sm text-left">
                 Detalles
               </th>
-              <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 border-b">
+              <th className="px-4 py-3 border-b font-medium text-gray-700 text-sm text-left">
                 Factura
               </th>
             </tr>
           </thead>
           <tbody>
-            {pedidosOrdenados.map((pedido) => (
+            {pedidosFiltrados.map((pedido) => (
               <tr
                 key={pedido.id}
                 className="hover:bg-gray-50 transition duration-200"
               >
-                <td className="py-3 px-4 text-sm text-gray-900 border-b">
+                <td className="px-4 py-3 border-b text-gray-900 text-sm">
                   {pedido.id}
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-900 border-b">
-                  {pedido.cliente.nombre} {pedido.cliente.apellido}
-                  <p>{pedido.cliente.documento}</p>
+                <td className="px-4 py-3 border-b text-gray-900 text-sm">
+                  {pedido.factura && pedido.factura.cliente ? (
+                    <>
+                      {pedido.factura.cliente.nombre}{' '}
+                      {pedido.factura.cliente.apellido}
+                      <p>{pedido.factura.cliente.documento}</p>
+                    </>
+                  ) : (
+                    <span className="text-red-500">Sin cliente</span>
+                  )}
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-900 border-b">
-                  {pedido?.estados[pedido?.estados.length - 1]?.estado?.nombre}{' '}
-                  {
-                    pedido?.estados[
-                      pedido?.estados.length - 1
-                    ].fechaRegistro?.split('T')[0]
-                  }
+                <td className="px-4 py-3 border-b text-gray-900 text-sm">
+                  {ESTADO_PEDIDO_LABELS[pedido.estado] || pedido.estado}
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-900 border-b">
-                  ${pedido.total.toLocaleString()}
+                <td className="px-4 py-3 border-b text-gray-900 text-sm">
+                  {pedido.totalPedido !== undefined
+                    ? `$${pedido.totalPedido.toLocaleString()}`
+                    : 'N/A'}
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-900 border-b">
-                  {new Date(pedido.fechaRegistro).toLocaleDateString()}
+                <td className="px-4 py-3 border-b text-gray-900 text-sm">
+                  {pedido.fechaCreacion
+                    ? pedido.fechaCreacion.replace('T', ' ').substring(0, 19)
+                    : 'N/A'}
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-900 border-b  ">
-                  <Link to={`/${modulo}/pedido/informacion/${pedido.ref}`}>
-                    <FaInfoCircle className="w-5 h-5 text-blue-500 hover:text-blue-700  cursor-pointer" />
+                <td className="px-4 py-3 border-b text-gray-900 text-sm">
+                  <Link
+                    to={`/${modulo}/pedido/informacion/${
+                      pedido.factura?.referencia || pedido.id
+                    }`}
+                  >
+                    <FaInfoCircle className="w-5 h-5 text-blue-500 hover:text-blue-700 cursor-pointer" />
                   </Link>
-                  
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-900 border-b  ">
-                <FacturaPDF factura={pedido} />
+                <td className="px-4 py-3 border-b text-gray-900 text-sm">
+                  <FacturaPDF factura={pedido} />
                 </td>
               </tr>
             ))}

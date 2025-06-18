@@ -8,6 +8,7 @@ import RegistrarVendedor from './registrar/RegistrarVendedor';
 import { useUserContext } from '../../Context/UserContext';
 import Loader from '../../common/Loader';
 
+
 const BASE_URL =
   import.meta.env.MODE === 'production'
     ? import.meta.env.VITE_URL_BACKEND_PROD
@@ -93,7 +94,6 @@ const Vendedores = () => {
                 <th className="px-4 py-2">Celular</th>
                 <th className="px-4 py-2">Cédula</th>
                 <th className="px-4 py-2">Rol</th>
-                <th className="px-4 py-2">Editar</th>
               </tr>
             </thead>
             <tbody>
@@ -106,11 +106,7 @@ const Vendedores = () => {
                   <td className="px-4 py-2">{v.telefono}</td>
                   <td className="px-4 py-2">{v.cedula}</td>
                   <td className="px-4 py-2">{v.rol?.nombre}</td>
-                  <td className="px-4 py-2">
-                    <Link to={'/admin/vendedores/' + v.id + '/editar'}>
-                      <FaEdit className="w-5 h-5 text-orange-500 hover:text-orange-700 cursor-pointer" />
-                    </Link>
-                  </td>
+
                 </tr>
               ))}
               {vendedores.length === 0 && !loading && (

@@ -28,6 +28,7 @@ type FormData = {
 const EditarVendedor: React.FC = () => {
   const token = localStorage.getItem('token');
   const { id } = useParams<{ id: string }>();
+  console.log('EditarVendedor mounted, id:', id);
   const { modulo } = useUserContext();
   const { roles, usuarios, fetchUsuarios } = useUsuariosContext();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -78,22 +79,26 @@ const EditarVendedor: React.FC = () => {
     console.log(formData);
     try {
       setLoading(true);
-      const response = await axios.put(`${BASE_URL}usuario/update`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      // Use the correct endpoint for administrativos (POST for create/update)
+      const response = await axios.post(
+        `${BASE_URL}/api/administrativos`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
-
-      if (response.data.success) {
-        console.log('Usuario actualizado:', response.data);
-        fetchUsuarios();
+      );
+      if (response.status === 201 || response.status === 200) {
+        console.log('Vendedor actualizado:', response.data);
+        // Optionally refresh list or context here
         navigate(-1);
       } else {
-        setErrorMsg(response.data.msg);
+        setErrorMsg('No se pudo actualizar el vendedor');
       }
     } catch (error) {
-      setErrorMsg('Error al actualizar el usuario');
-      console.error('Error al actualizar el usuario:', error);
+      setErrorMsg('Error al actualizar el vendedor');
+      console.error('Error al actualizar el vendedor:', error);
     } finally {
       setLoading(false);
     }

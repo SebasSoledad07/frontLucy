@@ -8,6 +8,7 @@ import axios from 'axios';
 
 import { useProductoContext } from '../../../../Context/ProductoContext';
 import { useUserContext } from '../../../../Context/UserContext';
+import { useCart } from '../../../../Context/CartContext';
 import { Producto } from '../../../../types/producto';
 
 // Add categoriaId prop
@@ -17,6 +18,7 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
     ? useProductoContext()
     : { categorias: [] };
   const { modulo } = useUserContext();
+  const { cart, addToCart } = useCart();
   const [selectedCategoria, setSelectedCategoria] = useState('');
   const [selectedSubCategoria, setSelectedSubCategoria] = useState('');
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -81,19 +83,19 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
     }
   }
   console.log('modulo:', modulo);
-  if (!modulo || modulo === 'null' || modulo === 'undefined') {
-    return (
-      <div className="p-4 text-[#7A5B47]">
-        Cargando información de usuario...
-        <br />
-        <span style={{ color: 'red' }}>DEBUG: modulo = {String(modulo)}</span>
-        <br />
-        <span style={{ color: 'red' }}>
-          DEBUG: payload = {JSON.stringify(payload)}
-        </span>
-      </div>
-    );
-  }
+  // if (!modulo || modulo === 'null' || modulo === 'undefined') {
+  //   return (
+  //     <div className="p-4 text-[#7A5B47]">
+  //       Cargando información de usuario...
+  //       <br />
+  //       <span style={{ color: 'red' }}>DEBUG: modulo = {String(modulo)}</span>
+  //       <br />
+  //       <span style={{ color: 'red' }}>
+  //         DEBUG: payload = {JSON.stringify(payload)}
+  //       </span>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div>
@@ -139,90 +141,142 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
         </div>
       )}
 
-      {/* Cards de productos */}
+      {/* Cards de variantes de productos */}
       <div className="md:flex-wrap gap-3 grid grid-cols-1 md:grid-cols-3 p-4">
         {loading ? (
           <p className="text-[#7A5B47]">Cargando productos...</p>
         ) : error ? (
           <p className="text-red-500">{error}</p>
         ) : filteredProductos.length > 0 ? (
-          filteredProductos.map((item) => (
-            <div
-              key={item.id}
-              className="bg-[#FFFFFF] shadow-md p-4 border border-[#F4B1C7] rounded-lg"
-            >
-              <div className="flex justify-end items-center">
-                <Link
-                  to={`/${modulo}/stock/${item.id}/informacion`}
-                  className="text-[#B199E1] hover:text-[#A27FD6]"
-                >
-                  <FaInfoCircle size={20} />
-                </Link>
-                {modulo === 'admin' && (
+          filteredProductos.flatMap((item) =>
+            (item.variante &&
+            Array.isArray(item.variante) &&
+            item.variante.length > 0
+              ? item.variante
+              : [{ ...item, isFallback: true }]
+            ).map((variante, idx) => (
+              <div
+                key={variante.id || `${item.id}-fallback`}
+                className="bg-[#FFFFFF] shadow-md p-4 border border-[#F4B1C7] rounded-lg"
+              >
+                <div className="flex justify-end items-center">
                   <Link
-                    to={`/${modulo}/stock/${item.id}/editar`}
-                    className="ml-4 text-[#F4B1C7] hover:text-[#E38AAA]"
+                    to={`/${modulo}/stock/${item.id}/informacion`}
+                    className="text-[#B199E1] hover:text-[#A27FD6]"
                   >
-                    <FaEdit size={20} />
+                    <FaInfoCircle size={20} />
                   </Link>
-                )}
-              </div>
-              <Carousel showThumbs={false} infiniteLoop className="w-full h-36">
-                {item.imagenes && item.imagenes.length > 0
-                  ? item.imagenes.map((imagen: any, idx: number) => {
-                      let imageUrl = '/placeholder.png';
-                      if (typeof imagen === 'object') {
-                        if (imagen.data) {
-                          // Render base64 jpg
-                          imageUrl = `data:image/jpeg;base64,${imagen.data}`;
-                        } else if (imagen.url) {
-                          imageUrl = imagen.url.startsWith('http')
-                            ? imagen.url
-                            : `${BASE_URL}/${imagen.url}`;
+                  {modulo === 'admin' && (
+                    <Link
+                      to={`/${modulo}/stock/${item.id}/editar`}
+                      className="ml-4 text-[#F4B1C7] hover:text-[#E38AAA]"
+                    >
+                      <FaEdit size={20} />
+                    </Link>
+                  )}
+                </div>
+                <Carousel
+                  showThumbs={false}
+                  infiniteLoop
+                  className="w-full h-36"
+                >
+                  {item.imagenes && item.imagenes.length > 0
+                    ? item.imagenes.map((imagen: any, idx: number) => {
+                        let imageUrl = '/placeholder.png';
+                        if (typeof imagen === 'object') {
+                          if (imagen.data) {
+                            imageUrl = `data:image/jpeg;,${imagen.data}`;
+                          } else if (imagen.url) {
+                            imageUrl = imagen.url.startsWith('http')
+                              ? imagen.url
+                              : `${BASE_URL}/${imagen.url}`;
+                          }
                         }
-                      }
-                      return (
-                        <div key={idx}>
+                        return (
+                          <div key={idx}>
+                            <img
+                              src={imageUrl}
+                              alt={`${item.nombre} - ${idx + 1}`}
+                              className="rounded-md w-full h-36 object-cover"
+                            />
+                          </div>
+                        );
+                      })
+                    : [
+                        <div key="placeholder">
                           <img
-                            src={imageUrl}
-                            alt={`${item.nombre} - ${idx + 1}`}
+                            src="/placeholder.png"
+                            alt="Sin imagen"
                             className="rounded-md w-full h-36 object-cover"
                           />
+                        </div>,
+                      ]}
+                </Carousel>
+                <div className="mt-4">
+                  <h3 className="font-semibold text-[#7A5B47] text-lg">
+                    {item.nombre.length > 15
+                      ? item.nombre.slice(0, 15) + '...'
+                      : item.nombre}
+                  </h3>
+                  {/* Variante info */}
+                  {variante.isFallback ? null : (
+                    <>
+                      <div className="flex justify-between mb-1 text-sm">
+                        <span className="font-bold">Talla:</span>
+                        <span>{variante.talla?.nombre}</span>
+                      </div>
+                      <div className="flex justify-between mb-1 text-sm">
+                        <span className="font-bold">Stock:</span>
+                        <span>{variante.stockActual}</span>
+                      </div>
+                      <div className="flex justify-between mb-1 text-sm">
+                        <span className="font-bold">Precio:</span>
+                        <span>
+                          {variante.precioVenta?.toLocaleString('es-CO', {
+                            style: 'currency',
+                            currency: 'COP',
+                          })}
+                        </span>
+                      </div>
+                      {variante.porcentajeDescuento > 0 && (
+                        <div className="flex justify-between mb-1 text-sm">
+                          <span className="font-bold text-green-600">
+                            Descuento:
+                          </span>
+                          <span className="text-green-600">
+                            {variante.porcentajeDescuento}%
+                          </span>
                         </div>
-                      );
-                    })
-                  : [
-                      <div key="placeholder">
-                        <img
-                          src="/placeholder.png"
-                          alt="Sin imagen"
-                          className="rounded-md w-full h-36 object-cover"
-                        />
-                      </div>,
-                    ]}
-              </Carousel>
-              <div className="mt-4">
-                <h3 className="font-semibold text-[#7A5B47] text-lg">
-                  {item.nombre.length > 15
-                    ? item.nombre.slice(0, 15) + '...'
-                    : item.nombre}
-                </h3>
-                <div className="flex justify-between">
-                  <p className="text-[#7A5B47] text-sm">Stock:</p>
-                  <strong className="text-[#7A5B47] text-sm">
-                    {item.stock}{' '}
-                    {/* Assuming 'stock' is the correct property */}
-                  </strong>
-                </div>
-                <div className="flex justify-between">
-                  <p className="text-[#7A5B47] text-sm">Visible:</p>
-                  <p className="text-[#7A5B47] text-sm">
-                    {item.activo ? 'Sí' : 'No'}
-                  </p>
+                      )}
+                    </>
+                  )}
+                  <div className="flex justify-end items-center mt-2">
+                    <button
+                      className="bg-[#F4B1C7] hover:bg-[#E38AAA] px-3 py-1 rounded font-bold text-white"
+                      onClick={() =>
+                        addToCart({
+                          ...item,
+                          ...(!variante.isFallback && {
+                            precioVenta: variante.precioVenta,
+                            talla: variante.talla,
+                            stockActual: variante.stockActual,
+                            porcentajeDescuento: variante.porcentajeDescuento,
+                          }),
+                        })
+                      }
+                      disabled={
+                        !variante.isFallback && variante.stockActual <= 0
+                      }
+                    >
+                      {!variante.isFallback && variante.stockActual <= 0
+                        ? 'Sin stock'
+                        : 'Agregar a carrito'}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            )),
+          )
         ) : (
           <p className="text-[#7A5B47]">No se encontraron productos.</p>
         )}

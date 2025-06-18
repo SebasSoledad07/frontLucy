@@ -77,35 +77,49 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
     fetchCategorias();
   }, [BASE_URL]);
 
-  // Fetch subcategorias without authorization
+  // Fetch all subcategorias on mount (not just for selectedCategoria)
   useEffect(() => {
     const fetchSubCategorias = async () => {
-      if (!selectedCategoria) {
-        setSubCategorias([]);
-        return;
-      }
       try {
-        const response = await axios.get(
-          `${BASE_URL}/api/subcategorias/categoria/${selectedCategoria}`,
-        );
+        const response = await axios.get(`${BASE_URL}/api/subcategorias`);
         setSubCategorias(response.data.data || []);
       } catch (err) {
         setSubCategorias([]);
       }
     };
     fetchSubCategorias();
-  }, [selectedCategoria, BASE_URL]);
+  }, [BASE_URL]);
 
-  // Filtered categorias and subcategorias by nombre
-  const filteredCategorias = categorias.filter((c) =>
-    c.nombre.toLowerCase().includes(selectedCategoria.toLowerCase()),
-  );
-  const filteredSubCategorias = subCategorias.filter((s) =>
-    s.nombre.toLowerCase().includes(selectedSubCategoria.toLowerCase()),
-  );
+  // Filtering logic
+  const filteredProductos = productos.filter((producto) => {
+    // Categoria filter
+    const matchCategoria = selectedCategoria
+      ? producto.categoriaId?.toString() === selectedCategoria ||
+        producto.categoria?.id?.toString() === selectedCategoria
+      : true;
+    // Subcategoria filter: check producto and variantes
+    const matchSubCategoria = selectedSubCategoria
+      ? producto.subcategoriaId?.toString() === selectedSubCategoria ||
+        producto.subCategoria?.id?.toString() === selectedSubCategoria ||
+        (producto.variante &&
+          Array.isArray(producto.variante) &&
+          producto.variante.some(
+            (v) =>
+              v.subcategoriaId?.toString() === selectedSubCategoria ||
+              v.subCategoria?.id?.toString() === selectedSubCategoria,
+          ))
+      : true;
+    return matchCategoria && matchSubCategoria;
+  });
 
-  // Remove frontend filter by subcategoria, since we now fetch by subcategoria
-  const filteredProductos = productos;
+  // Subcategoria selector: show all, or filter by selectedCategoria if desired
+  const subcategoriasToShow = selectedCategoria
+    ? subCategorias.filter(
+        (sub) =>
+          sub.categoriaId?.toString() === selectedCategoria ||
+          sub.categoria?.id?.toString() === selectedCategoria,
+      )
+    : subCategorias;
 
   // Only show selectors if not filtering by categoriaId
   const showSelectors = !categoriaId;
@@ -150,10 +164,10 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
             value={selectedSubCategoria}
             onChange={(e) => setSelectedSubCategoria(e.target.value)}
             className="bg-white p-2 border border-[#F4B1C7] rounded-md focus:ring-[#B695E0] focus:ring-2 text-[#7A5B47]"
-            disabled={!selectedCategoria || subCategorias.length === 0}
+            disabled={subcategoriasToShow.length === 0}
           >
             <option value="">Todas las Subcategorías</option>
-            {subCategorias.map((subCategoria) => (
+            {subcategoriasToShow.map((subCategoria) => (
               <option key={subCategoria.id} value={subCategoria.id.toString()}>
                 {subCategoria.nombre}
               </option>

@@ -51,12 +51,8 @@ export const ProductoProvider: React.FC<{ children: ReactNode }> = ({
   // Función para obtener las categorías y marcas
   const fetchCategorias = async () => {
     try {
-      const headers = { Authorization: `Bearer ${token}` };
-
-      // Solicitud para obtener las categorías
-      const categoriasResponse = await axios.get(`${BASE_URL}/api/categorias`, {
-        headers,
-      });
+      // No auth header needed
+      const categoriasResponse = await axios.get(`${BASE_URL}/api/categorias`);
       setCategorias(categoriasResponse.data.data);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -82,8 +78,9 @@ export const ProductoProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   useEffect(() => {
+    // Fetch categories without requiring token
+    fetchCategorias();
     if (token) {
-      fetchCategorias();
       fetchProductos();
     }
   }, [token]);

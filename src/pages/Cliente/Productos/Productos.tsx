@@ -76,31 +76,55 @@ const Productos: React.FC = () => {
     fetchData();
   }, []);
 
-  // Productos filtrados
+  // Productos filtrados y ordenados
   const filteredProductos = useMemo(() => {
-    let filtered = productos?.filter((producto: any) => {
+    let filtered = productos.filter((producto: any) => {
+      // Strict category filter: only match if categoriaId or categoria?.id matches
       const matchCategoria = selectedCategoria
-        ? categorias?.some(
-            (cat: any) =>
-              cat.id === selectedCategoria &&
-              cat.subCategorias?.some(
-                (subCat: any) => subCat.id === producto.subcategoriaId,
-              ),
-          )
+        ? producto.categoriaId === selectedCategoria ||
+          producto.categoria?.id === selectedCategoria
         : true;
+      // Strict subcategory filter: only match if subcategoriaId or subCategoria?.id matches
       const matchSubCategoria = selectedSubCategoria
-        ? producto.subcategoriaId === selectedSubCategoria
+        ? producto.subcategoriaId === selectedSubCategoria ||
+          producto.subCategoria?.id === selectedSubCategoria
         : true;
+      // Search filter
       const matchSearch = searchText
-        ? producto.nombre.toLowerCase().includes(searchText.toLowerCase())
+        ? producto.nombre?.toLowerCase().includes(searchText.toLowerCase())
         : true;
+      // If a subcategory is selected, ensure it belongs to the selected category (if any)
+      if (selectedCategoria && selectedSubCategoria) {
+        const cat = categorias.find((cat: any) => cat.id === selectedCategoria);
+        if (
+          !cat?.subCategorias?.some(
+            (sub: any) => sub.id === selectedSubCategoria,
+          )
+        ) {
+          return false;
+        }
+      }
       return matchCategoria && matchSubCategoria && matchSearch;
     });
-    // Ordenar si es necesario
+    // Ordenar por precio mínimo de variante, o precioVenta, o precio
+    const getMinPrecio = (prod: any) => {
+      if (
+        prod.variante &&
+        Array.isArray(prod.variante) &&
+        prod.variante.length > 0
+      ) {
+        return Math.min(...prod.variante.map((v: any) => v.precioVenta || 0));
+      }
+      return prod.precioVenta || prod.precio || 0;
+    };
     if (sortOrder === 'asc') {
-      filtered = filtered.sort((a: any, b: any) => a.precio - b.precio);
+      filtered = filtered.sort(
+        (a: any, b: any) => getMinPrecio(a) - getMinPrecio(b),
+      );
     } else if (sortOrder === 'desc') {
-      filtered = filtered.sort((a: any, b: any) => b.precio - a.precio);
+      filtered = filtered.sort(
+        (a: any, b: any) => getMinPrecio(b) - getMinPrecio(a),
+      );
     }
     return filtered;
   }, [

@@ -1,17 +1,18 @@
-// src/components/Sidebar.tsx
-
-import React, { useEffect, useRef, useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
-import SidebarLinkGroup from './SidebarLinkGroup';
 import {
   AiOutlineDashboard,
   AiOutlineUser,
   AiFillDropboxSquare,
 } from 'react-icons/ai';
-import Brand from '../../Global/Brand';
-import { useUserContext } from '../../Context/UserContext';
 import { FaFileInvoiceDollar, FaQuestionCircle } from 'react-icons/fa';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+// src/components/Sidebar.tsx
+import React, { useEffect, useRef, useState } from 'react';
 import { BiSolidReport } from 'react-icons/bi';
+
+import { useUserContext } from '../../Context/UserContext';
+import SidebarLinkGroup from './SidebarLinkGroup';
+import Brand from '../../Global/Brand';
+
 interface SidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (arg: boolean) => void;
@@ -35,11 +36,6 @@ const routesSidebar: RouteItem[] = [
   { to: '/admin/stock', icon: AiFillDropboxSquare, label: 'Stock' },
   { to: '/admin/pedidos', icon: FaFileInvoiceDollar, label: 'Pedidos' },
   { to: '/admin/estadisticas', icon: BiSolidReport, label: 'Estadisticas' },
-  {
-    to: '/admin/preguntas',
-    icon: FaQuestionCircle,
-    label: 'Preguntas Frecuentes',
-  },
 
   // {
   //   to: '/admin/ui',
@@ -60,11 +56,6 @@ const routesSidebarVendedor: RouteItem[] = [
 
   { to: '/vendedor/stock', icon: AiFillDropboxSquare, label: 'Stock' },
   { to: '/vendedor/pedidos', icon: FaFileInvoiceDollar, label: 'Pedidos' },
-  {
-    to: '/vendedor/preguntas',
-    icon: FaQuestionCircle,
-    label: 'Preguntas Frecuentes',
-  },
 
   // {
   //   to: '/admin/ui',
@@ -157,7 +148,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       }`}
     >
       {/* Brand y botón de cerrar */}
-      <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5 border-b border-[#F4B1C7]">
+      <div className="flex justify-between items-center gap-2 px-6 py-5.5 lg:py-6.5 border-[#F4B1C7] border-b">
         <Link to={'/' + modulo}>
           <Brand dark={true} />
         </Link>
@@ -167,7 +158,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           onClick={() => setSidebarOpen(!sidebarOpen)}
           aria-controls="sidebar"
           aria-expanded={sidebarOpen}
-          className="block lg:hidden text-[#3A3A3A] hover:text-[#FFFFFF] transition-colors"
+          className="lg:hidden block text-[#3A3A3A] hover:text-[#FFFFFF] transition-colors"
         >
           {/* Ícono de cerrar */}
           ...
@@ -175,14 +166,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       </div>
 
       {/* Navegación */}
-      <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
-        <nav className="mt-3 py-4 px-4 lg:mt-1 lg:px-6">
+      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+        <nav className="mt-3 lg:mt-1 px-4 lg:px-6 py-4">
           <div>
-            <h3 className="mb-4 ml-4 text-sm font-semibold text-[#7A5B47] uppercase tracking-wider">
+            <h3 className="mb-4 ml-4 font-semibold text-[#7A5B47] text-sm uppercase tracking-wider">
               MENÚ
             </h3>
 
-            <ul className="mb-6 flex flex-col gap-1.5">
+            <ul className="flex flex-col gap-1.5 mb-6">
               {routesFiltered.map((route) =>
                 route.subRoutes ? (
                   <SidebarLinkGroup
@@ -215,7 +206,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                             !open && 'hidden'
                           }`}
                         >
-                          <ul className="mt-2 mb-5.5 flex flex-col gap-1.5 pl-6">
+                          <ul className="flex flex-col gap-1.5 mt-2 mb-5.5 pl-6">
                             {route?.subRoutes?.map((subRoute) => (
                               <li key={subRoute.to}>
                                 <NavLink

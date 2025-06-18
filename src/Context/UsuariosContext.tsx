@@ -18,9 +18,6 @@ type UsuariosContextType = {
   setUsuarios: React.Dispatch<React.SetStateAction<Usuario[] | null>>;
 
   fetchUsuarios: () => void;
-  preguntas: Pregunta[] | null;
-  setPreguntas: React.Dispatch<React.SetStateAction<Pregunta[] | null>>;
-  fetchPreguntas: () => void;
 };
 
 // Crea el contexto y define el tipo que puede ser UserContextType o undefined
@@ -43,7 +40,6 @@ export const UsuariosProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [roles, setRoles] = useState<Rol[] | null>([]);
   const [usuarios, setUsuarios] = useState<Usuario[] | null>([]);
-  const [preguntas, setPreguntas] = useState<Pregunta[] | null>([]);
 
   const BASE_URL = import.meta.env.VITE_URL_BACKEND_LOCAL;
   if (!BASE_URL || typeof BASE_URL !== 'string') {
@@ -87,37 +83,11 @@ export const UsuariosProvider: React.FC<{ children: ReactNode }> = ({
       console.error('Error fetching data:', error);
     }
   };
-  const fetchPreguntas = async () => {
-    try {
-      if (!normalizedBaseUrl) throw new Error('BASE_URL is not defined');
-      const headers = {
-        Authorization: `Bearer ${token}`,
-      };
-      // Check if the preguntas endpoint exists before calling
-      const preguntasUrl = `${normalizedBaseUrl}/pregunta`;
-      // Optionally, skip if not implemented in backend
-      // You can comment out the next block if you want to always try
-      const res = await fetch(preguntasUrl, { method: 'HEAD' });
-      if (!res.ok) {
-        console.warn('Endpoint /pregunta not found, skipping fetchPreguntas');
-        return;
-      }
-      // Solicitud para obtener las preguntas
-      const preguntasResponse = await axios.get(preguntasUrl, { headers });
-      console.log(preguntasResponse);
-      setPreguntas(preguntasResponse.data.data);
-    } catch (error) {
-      console.warn(
-        'No se pudo obtener preguntas (puede ser normal si el endpoint no existe):',
-        error,
-      );
-    }
-  };
+
   useEffect(() => {
     if (token) {
       fetchUsuarios();
       fetchRoles();
-      fetchPreguntas();
     }
   }, [token]);
 
@@ -129,9 +99,6 @@ export const UsuariosProvider: React.FC<{ children: ReactNode }> = ({
         usuarios,
         setUsuarios,
         fetchUsuarios,
-        preguntas,
-        setPreguntas,
-        fetchPreguntas,
       }}
     >
       {children}

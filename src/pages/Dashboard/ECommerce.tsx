@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
+import React, { useState } from 'react';
 import axios from 'axios';
+
 import { useProductoContext } from '../../Context/ProductoContext';
-import CategoriasList from './CategoriasList';
-import Loader from '../../common/Loader';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { useUserContext } from '../../Context/UserContext';
+import CategoriasList from './CategoriasList';
+import Loader from '../../common/Loader';
+
 const ECommerce = () => {
   const { categorias } = useProductoContext();
-  const {modulo}=useUserContext();
+  const { modulo } = useUserContext();
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [entityType, setEntityType] = useState<string>('');
   const [nombre, setNombre] = useState<string>('');
@@ -37,15 +39,12 @@ const ECommerce = () => {
   const handleGuardarEntidad = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-    
       if (entityType === 'categoria') {
         await saveCategoria();
       } else if (entityType === 'subCategoria') {
-        if(!categoriaId) return
+        if (!categoriaId) return;
         await saveSubCategoria();
-      } 
-
-      
+      }
     } catch (error) {
       console.error('Error al guardar la entidad:', error);
     }
@@ -72,15 +71,14 @@ const ECommerce = () => {
           },
         },
       );
-      if(response.data.success){
+      if (response.data.success) {
         setModalOpen(false);
-      }else{
+      } else {
         setErrorMsg(response.data.msg);
       }
     } catch (error) {
       console.error('Error al guardar la categoría:', error);
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -105,10 +103,10 @@ const ECommerce = () => {
           },
         },
       );
-  
-      if(response.data.success){
+
+      if (response.data.success) {
         setModalOpen(false);
-      }else{
+      } else {
         setErrorMsg(response.data.msg);
       }
     } catch (error) {
@@ -119,124 +117,122 @@ const ECommerce = () => {
   };
 
   return (
-   <>
-   <Breadcrumb pageName="Catalogo" lastPage="" />
-   {loading && 
-        <Loader />
-        }
-    <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-      {modulo==="admin" && (
-      <div className="mb-2">
-        <div className="flex gap-4 p-4">
-       
-          <button
-            onClick={() => handleOpenModal('categoria')}
-            className="rounded bg-primary p-3 text-white"
-          >
-            Registrar Categoría
-          </button>
-          <button
-            onClick={() => handleOpenModal('subCategoria')}
-            className="rounded bg-primary p-3 text-white"
-          >
-            Registrar SubCategoría
-          </button>
-        </div>
-      </div>
-      )}
-      
-      <div className="flex space-x-4 overflow-x-auto p-4">
-        <CategoriasList />
-      </div>
-
-      <Dialog.Root open={modalOpen} onOpenChange={setModalOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 w-full h-full bg-black opacity-40" />
-         <form onSubmit={handleGuardarEntidad}>
-         <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-full max-w-lg mx-auto px-4">
-            <div className="bg-white rounded-md shadow-lg px-4 py-6">
-              <Dialog.Title className="text-lg font-medium text-gray-800 text-center mb-4 uppercase">
-                {entityType === 'categoria' && 'Registrar Categoría'}
-                {entityType === 'subCategoria' && 'Registrar SubCategoría'}
-
-              </Dialog.Title>
-              {errorMsg && (
-                <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-md">
-                  {errorMsg}
-                </div>
-              )}
-
-              <div className="space-y-6">
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-2">
-                    Nombre
-                  </label>
-                  <input
-                    type="text"
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    className="w-full rounded border p-2"
-                    required
-                  />
-                </div>
-
-                {entityType === 'categoria' && (
-                  <div className="mb-4">
-                    <label className="mb-3 block text-black dark:text-white">
-                      Agregar Imagen
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="w-full rounded-md border border-stroke p-3 outline-none transition file:mr-4 file:rounded file:border-[0.5px] file:border-stroke file:bg-[#EEEEEE] file:py-1 file:px-2.5 file:text-sm focus:border-primary file:focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:file:border-strokedark dark:file:bg-white/30 dark:file:text-white"
-                      required
-                   />
-                  </div>
-                )}
-
-                {entityType === 'subCategoria' && (
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium mb-2">
-                      Categoría
-                    </label>
-                    <select
-                      value={categoriaId}
-                      onChange={(e) => setCategoriaId(parseInt(e.target.value))}
-                      className="w-full rounded border p-2"
-                      required
-                    >
-                      <option value="">Seleccione una categoría</option>
-                      {categorias?.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2 mt-4">
-                <Dialog.Close asChild>
-                  <button className="w-full mt-2 p-2.5 flex-1 text-gray-800 rounded-md border outline-none ring-offset-2 ring-indigo-600 focus:ring-2">
-                    Cancelar
-                  </button>
-                </Dialog.Close>
-                <button
-                type='submit'
-                  className="w-full mt-2 p-2.5 flex-1 text-white bg-indigo-600 rounded-md outline-none ring-offset-2 ring-indigo-600 focus:ring-2"
-                >
-                  Guardar
-                </button>
-              </div>
+    <>
+      <Breadcrumb pageName="Inicio" lastPage="" />
+      {loading && <Loader />}
+      <div className="bg-white dark:bg-boxdark shadow-default border border-stroke dark:border-strokedark rounded-sm">
+        {modulo === 'admin' && (
+          <div className="mb-2">
+            <div className="flex gap-4 p-4">
+              <button
+                onClick={() => handleOpenModal('categoria')}
+                className="bg-primary p-3 rounded text-white"
+              >
+                Registrar Categoría
+              </button>
+              <button
+                onClick={() => handleOpenModal('subCategoria')}
+                className="bg-primary p-3 rounded text-white"
+              >
+                Registrar SubCategoría
+              </button>
             </div>
-          </Dialog.Content>
-         </form>
-        </Dialog.Portal>
-      </Dialog.Root>
-    </div>
-   </>
+          </div>
+        )}
+
+        <div className="flex space-x-4 p-4 overflow-x-auto">
+          <CategoriasList />
+        </div>
+
+        <Dialog.Root open={modalOpen} onOpenChange={setModalOpen}>
+          <Dialog.Portal>
+            <Dialog.Overlay className="fixed inset-0 bg-black opacity-40 w-full h-full" />
+            <form onSubmit={handleGuardarEntidad}>
+              <Dialog.Content className="top-[50%] left-[50%] fixed mx-auto px-4 w-full max-w-lg translate-x-[-50%] translate-y-[-50%]">
+                <div className="bg-white shadow-lg px-4 py-6 rounded-md">
+                  <Dialog.Title className="mb-4 font-medium text-gray-800 text-lg text-center uppercase">
+                    {entityType === 'categoria' && 'Registrar Categoría'}
+                    {entityType === 'subCategoria' && 'Registrar SubCategoría'}
+                  </Dialog.Title>
+                  {errorMsg && (
+                    <div className="bg-red-100 mb-4 p-2 rounded-md text-red-700">
+                      {errorMsg}
+                    </div>
+                  )}
+
+                  <div className="space-y-6">
+                    <div className="mb-4">
+                      <label className="block mb-2 font-medium text-sm">
+                        Nombre
+                      </label>
+                      <input
+                        type="text"
+                        value={nombre}
+                        onChange={(e) => setNombre(e.target.value)}
+                        className="p-2 border rounded w-full"
+                        required
+                      />
+                    </div>
+
+                    {entityType === 'categoria' && (
+                      <div className="mb-4">
+                        <label className="block mb-3 text-black dark:text-white">
+                          Agregar Imagen
+                        </label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="disabled:bg-whiter dark:bg-form-input dark:file:bg-white/30 file:bg-[#EEEEEE] file:mr-4 p-3 file:px-2.5 file:py-1 border border-stroke focus:border-primary active:border-primary dark:border-form-strokedark dark:file:border-strokedark file:border-[0.5px] file:border-stroke file:focus:border-primary file:rounded rounded-md outline-none w-full dark:file:text-white file:text-sm transition disabled:cursor-default"
+                          required
+                        />
+                      </div>
+                    )}
+
+                    {entityType === 'subCategoria' && (
+                      <div className="mb-4">
+                        <label className="block mb-2 font-medium text-sm">
+                          Categoría
+                        </label>
+                        <select
+                          value={categoriaId}
+                          onChange={(e) =>
+                            setCategoriaId(parseInt(e.target.value))
+                          }
+                          className="p-2 border rounded w-full"
+                          required
+                        >
+                          <option value="">Seleccione una categoría</option>
+                          {categorias?.map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                              {cat.nombre}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-4">
+                    <Dialog.Close asChild>
+                      <button className="flex-1 mt-2 p-2.5 border rounded-md outline-none ring-indigo-600 focus:ring-2 ring-offset-2 w-full text-gray-800">
+                        Cancelar
+                      </button>
+                    </Dialog.Close>
+                    <button
+                      type="submit"
+                      className="flex-1 bg-indigo-600 mt-2 p-2.5 rounded-md outline-none ring-indigo-600 focus:ring-2 ring-offset-2 w-full text-white"
+                    >
+                      Guardar
+                    </button>
+                  </div>
+                </div>
+              </Dialog.Content>
+            </form>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </div>
+    </>
   );
 };
 

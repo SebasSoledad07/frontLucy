@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
-import ReactApexChart from "react-apexcharts";
-import { ApexOptions } from "apexcharts";
+import ReactApexChart from 'react-apexcharts';
+import { ApexOptions } from 'apexcharts';
+import React, { useMemo } from 'react';
 
 interface Producto {
   cantidad: number;
@@ -32,7 +32,9 @@ const ChartTwo: React.FC<ChartTwoProps> = ({ facturas }) => {
     facturas.forEach((factura) => {
       const month =
         factura.fechaRegistro &&
-        new Date(factura.fechaRegistro).toLocaleString("es-ES", { month: "long" });
+        new Date(factura.fechaRegistro).toLocaleString('es-ES', {
+          month: 'long',
+        });
 
       if (!month) return;
 
@@ -52,26 +54,28 @@ const ChartTwo: React.FC<ChartTwoProps> = ({ facturas }) => {
 
     // Obtener categorías (meses) y series (productos)
     const months = [
-      "enero",
-      "febrero",
-      "marzo",
-      "abril",
-      "mayo",
-      "junio",
-      "julio",
-      "agosto",
-      "septiembre",
-      "octubre",
-      "noviembre",
-      "diciembre",
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
     ];
 
     const allProducts = Array.from(
       new Set(
         facturas.flatMap((factura) =>
-          factura.productos.map((producto) => producto.producto.nombre)
-        )
-      )
+          Array.isArray(factura.productos)
+            ? factura.productos.map((producto) => producto.producto.nombre)
+            : [],
+        ),
+      ),
     );
 
     const series = allProducts.map((productName) => ({
@@ -84,10 +88,10 @@ const ChartTwo: React.FC<ChartTwoProps> = ({ facturas }) => {
 
   // Configuración del gráfico
   const options: ApexOptions = {
-    colors: ["#3C50E0", "#80CAEE", "#F78C6B", "#D4A5A5", "#A29BFE"],
+    colors: ['#3C50E0', '#80CAEE', '#F78C6B', '#D4A5A5', '#A29BFE'],
     chart: {
-      fontFamily: "Satoshi, sans-serif",
-      type: "bar",
+      fontFamily: 'Satoshi, sans-serif',
+      type: 'bar',
       height: 335,
       stacked: true,
       toolbar: {
@@ -101,7 +105,7 @@ const ChartTwo: React.FC<ChartTwoProps> = ({ facturas }) => {
       bar: {
         horizontal: false,
         borderRadius: 5,
-        columnWidth: "25%",
+        columnWidth: '25%',
       },
     },
     dataLabels: {
@@ -111,27 +115,27 @@ const ChartTwo: React.FC<ChartTwoProps> = ({ facturas }) => {
       categories,
       labels: {
         style: {
-          fontSize: "12px",
-          fontFamily: "Helvetica, Arial, sans-serif",
+          fontSize: '12px',
+          fontFamily: 'Helvetica, Arial, sans-serif',
         },
       },
     },
     yaxis: {
       title: {
-        text: "Precio de venta ($)",
+        text: 'Precio de venta ($)',
         style: {
-          fontSize: "14px",
-          fontWeight: "bold",
-          color: "#333",
+          fontSize: '14px',
+          fontWeight: 'bold',
+          color: '#333',
         },
       },
     },
     legend: {
-      position: "top",
-      horizontalAlign: "left",
-      fontFamily: "Satoshi",
+      position: 'top',
+      horizontalAlign: 'left',
+      fontFamily: 'Satoshi',
       fontWeight: 500,
-      fontSize: "14px",
+      fontSize: '14px',
       markers: {
         radius: 99,
       },
@@ -147,16 +151,21 @@ const ChartTwo: React.FC<ChartTwoProps> = ({ facturas }) => {
   };
 
   return (
-    <div className="col-span-12 rounded-sm mb-3 border border-stroke bg-white p-7.5 shadow-default dark:border-strokedark dark:bg-boxdark xl:col-span-4">
-      <div className="mb-4 justify-between gap-4 sm:flex">
+    <div className="col-span-12 xl:col-span-4 bg-white dark:bg-boxdark shadow-default mb-3 p-7.5 border border-stroke dark:border-strokedark rounded-sm">
+      <div className="sm:flex justify-between gap-4 mb-4">
         <div>
-          <h4 className="text-xl font-semibold text-black dark:text-white">
+          <h4 className="font-semibold text-black dark:text-white text-xl">
             Ventas por mes
           </h4>
         </div>
       </div>
       <div>
-        <ReactApexChart options={options} series={series} type="bar" height={350} />
+        <ReactApexChart
+          options={options}
+          series={series}
+          type="bar"
+          height={350}
+        />
       </div>
     </div>
   );

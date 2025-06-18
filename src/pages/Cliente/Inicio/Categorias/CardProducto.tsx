@@ -51,6 +51,8 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
           ? response.data
           : response.data.data || [];
         setProductos(productosData);
+        // Log the fetched products
+        console.log('Fetched productos:', productosData);
       } catch (err) {
         setError('Error al cargar productos');
         console.error('Error fetching productos:', err);
@@ -99,48 +101,6 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
 
   return (
     <div>
-      {showSelectors && (
-        <div className="flex md:flex-row flex-col gap-4 mb-4 ml-4">
-          <select
-            value={selectedCategoria}
-            onChange={(e) => {
-              setSelectedCategoria(e.target.value);
-              setSelectedSubCategoria('');
-            }}
-            className="bg-white p-2 border border-[#F4B1C7] rounded-md focus:ring-[#B695E0] focus:ring-2 text-[#7A5B47]"
-          >
-            <option value="">Todas las Categorías</option>
-            {categorias?.map((categoria) => (
-              <option key={categoria.id} value={categoria.id?.toString()}>
-                {categoria.nombre}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={selectedSubCategoria}
-            onChange={(e) => setSelectedSubCategoria(e.target.value)}
-            className="bg-white p-2 border border-[#F4B1C7] rounded-md focus:ring-[#B695E0] focus:ring-2 text-[#7A5B47]"
-            disabled={!selectedCategoria}
-          >
-            <option value="">Todas las Subcategorías</option>
-            {selectedCategoria &&
-              categorias
-                ?.find(
-                  (categoria) => categoria.id === parseInt(selectedCategoria),
-                )
-                ?.subCategorias?.map((subCategoria) => (
-                  <option
-                    key={subCategoria.id}
-                    value={subCategoria.id.toString()}
-                  >
-                    {subCategoria.nombre}
-                  </option>
-                ))}
-          </select>
-        </div>
-      )}
-
       {/* Cards de variantes de productos */}
       <div className="md:flex-wrap gap-3 grid grid-cols-1 md:grid-cols-3 p-4">
         {loading ? (
@@ -183,15 +143,15 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                   {item.imagenes && item.imagenes.length > 0
                     ? item.imagenes.map((imagen: any, idx: number) => {
                         let imageUrl = '/placeholder.png';
-                        if (typeof imagen === 'object') {
-                          if (imagen.data) {
-                            imageUrl = `data:image/jpeg;,${imagen.data}`;
-                          } else if (imagen.url) {
-                            imageUrl = imagen.url.startsWith('http')
-                              ? imagen.url
-                              : `${BASE_URL}/${imagen.url}`;
-                          }
-                        }
+                        // if (typeof imagen === 'object') {
+                        //   if (imagen.data) {
+                        //     imageUrl = `data:image/jpeg;,${imagen.data}`;
+                        //   } else if (imagen.url) {
+                        //     imageUrl = imagen.url.startsWith('http')
+                        //       ? imagen.url
+                        //       : `${BASE_URL}/${imagen.url}`;
+                        //   }
+                        // }
                         return (
                           <div key={idx}>
                             <img
@@ -254,15 +214,18 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                     <button
                       className="bg-[#F4B1C7] hover:bg-[#E38AAA] px-3 py-1 rounded font-bold text-white"
                       onClick={() =>
-                        addToCart({
-                          ...item,
-                          ...(!variante.isFallback && {
-                            precioVenta: variante.precioVenta,
-                            talla: variante.talla,
-                            stockActual: variante.stockActual,
-                            porcentajeDescuento: variante.porcentajeDescuento,
-                          }),
-                        })
+                        addToCart(
+                          {
+                            ...item,
+                            ...(!variante.isFallback && {
+                              precioVenta: variante.precioVenta,
+                              talla: variante.talla,
+                              stockActual: variante.stockActual,
+                              porcentajeDescuento: variante.porcentajeDescuento,
+                            }),
+                          },
+                          !variante.isFallback ? variante.talla?.id : undefined,
+                        )
                       }
                       disabled={
                         !variante.isFallback && variante.stockActual <= 0
@@ -278,7 +241,16 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
             )),
           )
         ) : (
-          <p className="text-[#7A5B47]">No se encontraron productos.</p>
+          <div className="flex flex-col justify-center items-center col-span-1 md:col-span-3 bg-[#FFFFFF] shadow-md p-4 border border-[#F4B1C7] rounded-lg min-h-[200px]">
+            <img
+              src="/placeholder.png"
+              alt="Sin productos"
+              className="mb-4 w-32 h-32 object-contain"
+            />
+            <p className="text-[#7A5B47] text-lg">
+              No se encontraron productos.
+            </p>
+          </div>
         )}
       </div>
     </div>

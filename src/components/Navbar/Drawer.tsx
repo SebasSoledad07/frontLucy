@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { FC, useMemo, useState } from 'react';
 import React from 'react';
 
+import { useUserContext } from '../../Context/UserContext';
 import { useCart } from '../../Context/CartContext';
 
 interface DrawerProps {
@@ -45,7 +46,11 @@ async function generateIntegritySignature(
 }
 
 const Drawer: FC<DrawerProps> = ({ isOpen, onClose }) => {
-  const { cart, updateQuantity, removeFromCart, getTotalPrice } = useCart();
+  const { cart, updateQuantity, removeFromCart, getTotalPrice, clearCart } =
+    useCart();
+  const { modulo, user } = useUserContext();
+  // Debug: show modulo and user
+  console.log('DEBUG Drawer modulo:', modulo, 'user:', user);
   const navigate = useNavigate();
   // Use precioVenta if available, fallback to precio
   const total = cart.reduce(
@@ -118,24 +123,64 @@ const Drawer: FC<DrawerProps> = ({ isOpen, onClose }) => {
             signature: { integrity: signature },
             redirectUrl: 'https://yourdomain.com/payments/result', // Change to your real URL
           });
-          checkout.open(function (result) {
+          checkout.open(async function (result) {
             // You can handle the result here
             console.log('Transaction result:', result);
             if (result && result.transaction) {
-              const transactionId = result.transaction.id;
-              const status = result.transaction.status;
-              // Example: show a message or handle success/failure
+              const transaction = result.transaction;
+              const status = transaction.status;
               if (status === 'APPROVED') {
-                alert(`¡Pago exitoso! ID: ${transactionId}`);
-                // Optionally: clearCart();
+                // Prepare payload for /api/facturas/checkout
+                const items = cart.map((item) => ({
+                  productoId: item.producto.id,
+                  tallaId: item.tallaId || 1, // Use tallaId from cart item
+                  cantidad: item.quantity,
+                }));
+                const payload = {
+                  transaction: {
+                    amountInCents: transaction.amountInCents,
+                    reference: transaction.reference,
+                    paymentMethodType: transaction.paymentMethodType,
+                    id: transaction.id,
+                    status: transaction.status,
+                    finalizedAt: transaction.finalizedAt,
+                  },
+                  items,
+                };
+                try {
+                  const token = localStorage.getItem('token'); // Adjust key if needed
+                  const BASE_URL =
+                    import.meta.env.MODE === 'production'
+                      ? import.meta.env.VITE_URL_BACKEND_PROD
+                      : import.meta.env.VITE_URL_BACKEND_LOCAL;
+                  const response = await fetch(
+                    `${BASE_URL}/api/facturas/checkout`,
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                      },
+                      body: JSON.stringify(payload),
+                      credentials: 'include', // send cookies for auth if needed
+                    },
+                  );
+                  if (response.ok) {
+                    alert(`¡Pago exitoso! ID: ${transaction.id}`);
+                    clearCart();
+                  } else {
+                    setWompiError('Error al registrar la factura.');
+                  }
+                } catch (err) {
+                  setWompiError('Error de red al registrar la factura.');
+                }
               } else if (status === 'DECLINED') {
-                alert(`Pago rechazado. ID: ${transactionId}`);
+                alert(`Pago rechazado. ID: ${transaction.id}`);
               } else {
                 alert(
-                  `Estado de la transacción: ${status} (ID: ${transactionId})`,
+                  `Estado de la transacción: ${status} (ID: ${transaction.id})`,
                 );
               }
-              // Optionally: send transactionId to your backend for verification
             }
           });
         } catch (e) {
@@ -261,29 +306,20 @@ const Drawer: FC<DrawerProps> = ({ isOpen, onClose }) => {
           <div className="mb-2 text-red-600 text-sm">{wompiError}</div>
         )}
         <div className="gap-4 grid grid-cols-2">
-          <button
-            onClick={onClose}
-            className="bg-white hover:bg-gray-100 px-4 py-2 border rounded-lg font-medium text-gray-900 text-sm"
-          >
-            Continuar
-          </button>
           {cart && cart.length > 0 && (
             <>
-              <button
-                onClick={() => {
-                  navigate('/cliente/pago');
-                  onClose();
-                }}
-                className="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded-lg font-medium text-white text-sm"
-              >
-                PAGAR PEDIDO
-              </button>
-              <button
-                onClick={handleWompiPay}
-                className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium text-white text-sm"
-              >
-                Pagar con Wompi
-              </button>
+              {modulo && modulo.includes('CLIENTE') ? (
+                <button
+                  onClick={handleWompiPay}
+                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium text-white text-sm"
+                >
+                  Pagar con Wompi
+                </button>
+              ) : (
+                <div className="flex justify-center items-center col-span-2 font-medium text-red-600 text-center">
+                  Debes iniciar sesión
+                </div>
+              )}
             </>
           )}
         </div>

@@ -23,16 +23,18 @@ const TopProductos: React.FC<TopProductosProps> = ({ facturas }) => {
     const sales: Record<string, number> = {};
 
     facturas.forEach((factura) => {
-      factura.productos.forEach((producto) => {
-        const productName = producto.producto.nombre;
-        const cantidad = producto.cantidad;
+      if (Array.isArray(factura.productos)) {
+        factura.productos.forEach((producto) => {
+          const productName = producto.producto.nombre;
+          const cantidad = producto.cantidad;
 
-        if (sales[productName]) {
-          sales[productName] += cantidad;
-        } else {
-          sales[productName] = cantidad;
-        }
-      });
+          if (sales[productName]) {
+            sales[productName] += cantidad;
+          } else {
+            sales[productName] = cantidad;
+          }
+        });
+      }
     });
 
     return Object.entries(sales)

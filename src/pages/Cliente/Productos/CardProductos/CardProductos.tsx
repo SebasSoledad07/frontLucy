@@ -1,4 +1,3 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Carousel } from 'react-responsive-carousel';
 import { useNavigate } from 'react-router-dom';
 import { BiSolidLike } from 'react-icons/bi';
@@ -13,115 +12,16 @@ const ProductList: React.FC<{
   const { addToCart } = useCart();
   const navigate = useNavigate();
 
-  // New: State for categorias, subcategorias, filters
-  const [categorias, setCategorias] = useState<any[]>([]);
-  const [subcategorias, setSubcategorias] = useState<any[]>([]);
-  const [selectedCategoria, setSelectedCategoria] = useState<string>('');
-  const [selectedSubCategoria, setSelectedSubCategoria] = useState<string>('');
-  const [productos, setProductos] = useState<any[]>(filteredProductos || []);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  // Fetch categorias and subcategorias
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const [catRes, subcatRes] = await Promise.all([
-          fetch('/api/categorias'),
-          fetch('/api/subcategorias'),
-        ]);
-        if (!catRes.ok || !subcatRes.ok)
-          throw new Error('Error al obtener categorías');
-        const catData = await catRes.json();
-        const subcatData = await subcatRes.json();
-        setCategorias(catData);
-        setSubcategorias(subcatData);
-      } catch (err: any) {
-        setError(err.message || 'Error desconocido');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  // Filter productos by categoria and subcategoria
-  const filtered = useMemo(() => {
-    let prods = filteredProductos || [];
-    if (selectedCategoria) {
-      prods = prods.filter(
-        (p) =>
-          p.categoriaId === parseInt(selectedCategoria) ||
-          (p.categoria && p.categoria.id === parseInt(selectedCategoria)),
-      );
-    }
-    if (selectedSubCategoria) {
-      prods = prods.filter(
-        (p) =>
-          p.subcategoriaId === parseInt(selectedSubCategoria) ||
-          (p.subCategoria &&
-            p.subCategoria.id === parseInt(selectedSubCategoria)),
-      );
-    }
-    return prods;
-  }, [filteredProductos, selectedCategoria, selectedSubCategoria]);
-
-  // UI: Filters
   return (
     <div>
-      <div className="flex md:flex-row flex-col gap-4 mb-4 ml-4">
-        <select
-          value={selectedCategoria}
-          onChange={(e) => {
-            setSelectedCategoria(e.target.value);
-            setSelectedSubCategoria('');
-          }}
-          className="bg-white p-2 border border-[#F4B1C7] rounded-md focus:ring-[#B695E0] focus:ring-2 text-[#7A5B47]"
-        >
-          <option value="">Todas las Categorías</option>
-          {categorias.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.nombre}
-            </option>
-          ))}
-        </select>
-        <select
-          value={selectedSubCategoria}
-          onChange={(e) => setSelectedSubCategoria(e.target.value)}
-          className="bg-white p-2 border border-[#F4B1C7] rounded-md focus:ring-[#B695E0] focus:ring-2 text-[#7A5B47]"
-          disabled={!selectedCategoria}
-        >
-          <option value="">Todas las Subcategorías</option>
-          {selectedCategoria &&
-            subcategorias
-              .filter(
-                (sub) =>
-                  sub.categoria &&
-                  (sub.categoria.id === parseInt(selectedCategoria) ||
-                    sub.categoria === parseInt(selectedCategoria)),
-              )
-              .map((sub) => (
-                <option key={sub.id} value={sub.id}>
-                  {sub.nombre}
-                </option>
-              ))}
-        </select>
-      </div>
       <div className="gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 dark:bg-slate-900 p-4 dark:border dark:border-t">
-        {loading ? (
-          <p className="text-[#7A5B47]">Cargando productos...</p>
-        ) : error ? (
-          <p className="text-red-500">{error}</p>
-        ) : filtered.length > 0 ? (
-          filtered.flatMap((producto, index) =>
-            (producto.variante &&
-            Array.isArray(producto.variante) &&
-            producto.variante.length > 0
-              ? producto.variante
-              : [{ ...producto, isFallback: true }]
-            ).map((variante, idx) => (
+        {filteredProductos.length > 0 ? (
+          filteredProductos.flatMap((producto, index) => {
+            const variantes =
+              producto.variante && Array.isArray(producto.variante)
+                ? producto.variante
+                : [{ ...producto, isFallback: true }];
+            return variantes.map((variante: any, idx: number) => (
               <motion.div
                 key={variante.id || `${producto.id}-fallback`}
                 className="relative overflow-hidden"
@@ -140,18 +40,8 @@ const ProductList: React.FC<{
                     }
                   >
                     {producto.imagenes.map((imagen: any, i: number) => {
-                      let imageUrl = '/placeholder.jpg';
-                      if (typeof imagen === 'object') {
-                        if (imagen.data) {
-                          imageUrl = `data:image/jpeg;base64,${imagen.data}`;
-                        } else if (imagen.url) {
-                          imageUrl = imagen.url.startsWith('http')
-                            ? imagen.url
-                            : '/' + imagen.url.replace(/^\//, '');
-                        }
-                      } else if (typeof imagen === 'string') {
-                        imageUrl = imagen;
-                      }
+                      let imageUrl = '/placeholder.png';
+
                       return (
                         <div
                           key={i}
@@ -171,7 +61,7 @@ const ProductList: React.FC<{
                 ) : (
                   <div style={{ width: '300px', height: '300px' }}>
                     <img
-                      src="/placeholder.jpg"
+                      src="/placeholder.png"
                       alt={producto.nombre ?? 'Producto'}
                       className="rounded-lg w-full h-full object-cover"
                     />
@@ -251,8 +141,8 @@ const ProductList: React.FC<{
                   </button>
                 </div>
               </motion.div>
-            )),
-          )
+            ));
+          })
         ) : (
           <p className="text-[#7A5B47]">No se encontraron productos.</p>
         )}

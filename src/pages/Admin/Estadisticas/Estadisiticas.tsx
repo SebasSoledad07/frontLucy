@@ -1,8 +1,9 @@
-import { useMemo } from "react";
-import ChartThree from "../../../components/Charts/ChartThree";
-import { usePedidoContext } from "../../../Context/PedidoContext";
-import ChartTwo from "../../../components/Charts/ChartTwo";
-import TopProductos from "./TopProductos/TopProductos";
+import { useMemo } from 'react';
+
+import { usePedidoContext } from '../../../Context/PedidoContext';
+import ChartThree from '../../../components/Charts/ChartThree';
+import ChartTwo from '../../../components/Charts/ChartTwo';
+import TopProductos from './TopProductos/TopProductos';
 
 const Estadisticas = () => {
   const { pedidos }: { pedidos: any[] } = usePedidoContext();
@@ -11,16 +12,18 @@ const Estadisticas = () => {
     const sales: Record<string, number> = {}; // Objeto para almacenar las ventas
 
     pedidos?.forEach((pedido: any) => {
-      pedido.productos.forEach((prod: any) => {
-        const productName = prod.producto?.nombre || "Producto Desconocido"; // Validación básica
-        const cantidad = prod.cantidad || 0;
+      if (Array.isArray(pedido.productos)) {
+        pedido.productos.forEach((prod: any) => {
+          const productName = prod.producto?.nombre || 'Producto Desconocido'; // Validación básica
+          const cantidad = prod.cantidad || 0;
 
-        if (sales[productName]) {
-          sales[productName] += cantidad;
-        } else {
-          sales[productName] = cantidad;
-        }
-      });
+          if (sales[productName]) {
+            sales[productName] += cantidad;
+          } else {
+            sales[productName] = cantidad;
+          }
+        });
+      }
     });
 
     return Object.entries(sales).map(([name, cantidad]) => ({
@@ -32,7 +35,7 @@ const Estadisticas = () => {
   return (
     <div>
       <TopProductos facturas={pedidos} />
-        <ChartTwo  facturas={pedidos} />
+      <ChartTwo facturas={pedidos} />
       <ChartThree productSales={productSales} />
     </div>
   );

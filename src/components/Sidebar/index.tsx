@@ -1,8 +1,4 @@
-import {
-  AiOutlineDashboard,
-  AiOutlineUser,
-  AiFillDropboxSquare,
-} from 'react-icons/ai';
+import { AiOutlineDashboard, AiOutlineUser, AiFillDropboxSquare, } from 'react-icons/ai';
 import { FaFileInvoiceDollar, FaQuestionCircle } from 'react-icons/fa';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 // src/components/Sidebar.tsx
@@ -12,6 +8,7 @@ import { BiSolidReport } from 'react-icons/bi';
 import { useUserContext } from '../../Context/UserContext';
 import SidebarLinkGroup from './SidebarLinkGroup';
 import Brand from '../../Global/Brand';
+
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -29,7 +26,7 @@ const routesSidebar: RouteItem[] = [
   {
     to: '/admin',
     icon: AiOutlineDashboard,
-    label: 'Catalogo',
+    label: 'Inicio',
   },
   { to: '/admin/vendedores', icon: AiOutlineUser, label: 'Vendedores' },
 
@@ -51,7 +48,7 @@ const routesSidebarVendedor: RouteItem[] = [
   {
     to: '/vendedor',
     icon: AiOutlineDashboard,
-    label: 'Catalogo',
+    label: 'Inicio',
   },
 
   { to: '/vendedor/stock', icon: AiFillDropboxSquare, label: 'Stock' },

@@ -1,7 +1,8 @@
 import { FaMinus, FaPlus, FaShoppingBag } from 'react-icons/fa';
 import { MdClose, MdDelete } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
-import { FC, useMemo } from 'react';
+import { FC, useMemo, useState } from 'react';
+import React from 'react';
 
 import { useCart } from '../../Context/CartContext';
 
@@ -20,10 +21,116 @@ const formatCurrency = (value: number | undefined) =>
       }).format(value)
     : '';
 
+function generateReference() {
+  return (
+    Math.random().toString(36).substring(2, 10) +
+    '-' +
+    Math.random().toString(36).substring(2, 10)
+  );
+}
+
+// Helper to generate SHA256 hash (returns hex string)
+async function generateIntegritySignature(
+  reference,
+  amount,
+  currency,
+  integritySecret,
+) {
+  const concatenated = `${reference}${amount}${currency}${integritySecret}`;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(concatenated);
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 const Drawer: FC<DrawerProps> = ({ isOpen, onClose }) => {
   const { cart, updateQuantity, removeFromCart, getTotalPrice } = useCart();
   const navigate = useNavigate();
-  const total = getTotalPrice();
+  // Use precioVenta if available, fallback to precio
+  const total = cart.reduce(
+    (sum, item) =>
+      sum +
+      (item.producto.precioVenta ?? item.producto.precio ?? 0) * item.quantity,
+    0,
+  );
+  const amountInCents = Math.round(total * 100); // total is in pesos, convert to cents
+  const integritySecret = 'test_integrity_gqvGp7QagLhVAyPzLGcrMFFANjMFhdxk'; // WARNING: Exposed for demo only
+  const publicKey = 'pub_test_yqWgvLY7kBrbtjNyD3fr0Ys8HWEGob2Q';
+  const currency = 'COP';
+  const [wompiError, setWompiError] = useState('');
+
+  // For debugging: log total and amountInCents
+  console.log(
+    'Wompi total:',
+    total,
+    'amountInCents:',
+    amountInCents,
+    'type:',
+    typeof total,
+  );
+
+  // Loads the Wompi widget script if not already present
+  const loadWompiScript = () => {
+    if (!document.getElementById('wompi-widget-js')) {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.wompi.co/widget.js';
+      script.id = 'wompi-widget-js';
+      document.body.appendChild(script);
+    }
+  };
+
+  // Handler for Wompi payment
+  const handleWompiPay = async () => {
+    setWompiError('');
+    if (!Number.isInteger(amountInCents) || amountInCents <= 0) {
+      setWompiError(
+        `El monto debe ser mayor a 0 para pagar con Wompi. (total: ${total}, amountInCents: ${amountInCents})`,
+      );
+      return;
+    }
+    loadWompiScript();
+    const reference = generateReference();
+    // Debug: log all signature values
+    console.log('WOMPI DEBUG:', {
+      reference,
+      amountInCents,
+      currency,
+      integritySecret,
+      concatenated: `${reference}${amountInCents}${currency}${integritySecret}`,
+    });
+    const signature = await generateIntegritySignature(
+      reference,
+      amountInCents,
+      currency,
+      integritySecret,
+    );
+    console.log('WOMPI DEBUG: signature', signature);
+    // Wait for widget.js to be loaded
+    function openWidget() {
+      if (window.WidgetCheckout) {
+        try {
+          const checkout = new window.WidgetCheckout({
+            currency,
+            amountInCents,
+            reference,
+            publicKey,
+            signature: { integrity: signature },
+            redirectUrl: 'https://yourdomain.com/payments/result', // Change to your real URL
+          });
+          checkout.open(function (result) {
+            // You can handle the result here
+            console.log('Transaction result:', result);
+          });
+        } catch (e) {
+          setWompiError('Error al abrir el widget de Wompi.');
+        }
+      } else {
+        setTimeout(openWidget, 100);
+      }
+    }
+    openWidget();
+  };
 
   const renderCarritoItem = (item) => {
     const producto = item.producto;
@@ -134,6 +241,9 @@ const Drawer: FC<DrawerProps> = ({ isOpen, onClose }) => {
             )}
           </span>
         </div>
+        {wompiError && (
+          <div className="mb-2 text-red-600 text-sm">{wompiError}</div>
+        )}
         <div className="gap-4 grid grid-cols-2">
           <button
             onClick={onClose}
@@ -142,15 +252,23 @@ const Drawer: FC<DrawerProps> = ({ isOpen, onClose }) => {
             Continuar
           </button>
           {cart && cart.length > 0 && (
-            <button
-              onClick={() => {
-                navigate('/cliente/pago');
-                onClose();
-              }}
-              className="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded-lg font-medium text-white text-sm"
-            >
-              PAGAR PEDIDO
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  navigate('/cliente/pago');
+                  onClose();
+                }}
+                className="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded-lg font-medium text-white text-sm"
+              >
+                PAGAR PEDIDO
+              </button>
+              <button
+                onClick={handleWompiPay}
+                className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium text-white text-sm"
+              >
+                Pagar con Wompi
+              </button>
+            </>
           )}
         </div>
       </footer>

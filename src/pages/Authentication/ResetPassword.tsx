@@ -1,107 +1,127 @@
-import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import AuthLayout from './AuthLayout';
+import React, { useState } from 'react';
 import axios from 'axios';
-import Loader from '../../common/Loader';
 
+import Loader from '../../common/Loader';
+import AuthLayout from './AuthLayout';
 
 const MAX_ATTEMPTS = 5;
 const MIN_PASSWORD_LENGTH = 4;
 
 const ResetPassword: React.FC = () => {
-  const BASE_URL = import.meta.env.VITE_URL_BACKEND_LOCAL;
+  const BASE_URL =
+    import.meta.env.MODE === 'production'
+      ? import.meta.env.VITE_URL_BACKEND_PROD
+      : import.meta.env.VITE_URL_BACKEND_LOCAL;
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
-  const [uuid, setUuid] = useState('');
-  const [code, setCode] = useState('');
+  const [codigo, setCodigo] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [sendEmail, setSendEmail] = useState(false);
+  const [step, setStep] = useState<'request' | 'verify' | 'reset'>('request');
   const [attempts, setAttempts] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
-  const handleSubmitSendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
+
+  // Step 1: Request password reset (send email)
+  const handleSubmitRequest = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage('');
+    setLoading(true);
     try {
-      const usuario = {
-        email: email.toUpperCase(),
-      };
-      setLoading(true);
-      const emailResponse = await axios.post(
-        `${BASE_URL}usuario/email/cambio`,
-        usuario,
+      const response = await axios.post(
+        `${BASE_URL}/api/auth/password-reset/request`,
+        {
+          email: email.trim(),
+        },
       );
-      console.log(emailResponse);
-      if (emailResponse.data.success) {
-        setSendEmail(true);
-        setUuid(emailResponse.data.data);
+      // If backend returns 202, continue to code step
+      if (response.status === 202) {
+        setStep('verify');
       } else {
-        setErrorMessage(emailResponse.data.msg);
+        setErrorMessage('Error al enviar el email');
       }
     } catch (error) {
-      console.error('Error al enviar el email:', error);
       setErrorMessage('Error al enviar el email');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmitValidateCode = async (
-    e: React.FormEvent<HTMLFormElement>,
-  ) => {
+  // Step 2: Verify code
+  const handleSubmitVerify = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage('');
-    // Verificar si se alcanzó el máximo de intentos
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/auth/password-reset/verify`,
+        {
+          email: email.trim(),
+          codigo: codigo.trim(),
+        },
+      );
+      // If backend returns 200, continue to change password
+      if (response.status === 200) {
+        setStep('reset');
+      } else {
+        setErrorMessage(response.data?.msg || 'Código incorrecto');
+      }
+    } catch (error) {
+      setErrorMessage('Error al verificar el código');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 3: Reset password
+  const handleSubmitReset = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErrorMessage('');
     if (attempts >= MAX_ATTEMPTS) {
       setErrorMessage('Máximo de intentos alcanzado');
       return;
     }
-
-    // Validar contraseñas iguales y longitud mínima
     if (password !== confirmPassword) {
       setErrorMessage('Las contraseñas no coinciden');
       return;
     }
-
     if (password.length < MIN_PASSWORD_LENGTH) {
       setErrorMessage(
         `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`,
       );
       return;
     }
-
+    setLoading(true);
     try {
-      // Simular el envío del código con la contraseña
-      console.log('Código y contraseña válidos:', { code, password });
-
-      const usuario = {
-        codigoCambio: code,
-        password,
-        uuid,
-        email,
-      };
-      console.log(usuario);
       setAttempts(attempts + 1);
-
-      // Mostrar mensaje de error si se alcanzan los intentos
       if (attempts + 1 >= MAX_ATTEMPTS) {
         setErrorMessage('Máximo de intentos alcanzado');
       }
-      setLoading(true);
       const response = await axios.post(
-        `${BASE_URL}usuario/codigo/cambio`,
-        usuario,
+        `${BASE_URL}/api/auth/password-reset/reset`,
+        {
+          email: email.trim(),
+          codigo: codigo.trim(),
+          newPassword: password,
+        },
       );
-      console.log(response);
-      if (response.data.success) {
-        alert('Contraseña cambiada con éxito');
+      // If backend returns 200 or 204, go back to /cliente/login
+      if (response.status === 200 || response.status === 204) {
         navigate('/cliente/login');
       } else {
-        setErrorMessage(response.data.msg);
+        setErrorMessage(response.data?.msg || 'Error al cambiar la contraseña');
       }
-    } catch (error) {
-      console.error('Error al cambiar la contraseña:', error);
+    } catch (error: any) {
+      // If error is due to OPTIONS 200, treat as success
+      if (
+        error?.response?.status === 200 &&
+        error?.response?.config?.method === 'options'
+      ) {
+        navigate('/cliente/login');
+      } else {
+        setErrorMessage('Error al cambiar la contraseña');
+      }
     } finally {
       setLoading(false);
     }
@@ -110,17 +130,19 @@ const ResetPassword: React.FC = () => {
   return (
     <AuthLayout>
       {loading && <Loader />}
-      <div className="w-full border-stroke dark:border-strokedark xl:w-1/2 xl:border-l-2">
-        <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
-          <span className="mb-1.5 block font-medium">Lucy Mundo de Pijamas</span>
-          <h2 className="mb-3 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
+      <div className="border-stroke dark:border-strokedark xl:border-l-2 w-full xl:w-1/2">
+        <div className="p-4 sm:p-12.5 xl:p-17.5 w-full">
+          <span className="block mb-1.5 font-medium">
+            Lucy Mundo de Pijamas
+          </span>
+          <h2 className="mb-3 font-bold text-black sm:text-title-xl2 dark:text-white text-2xl">
             Recuperar Contraseña
           </h2>
-          {!sendEmail ? (
-            <form onSubmit={handleSubmitSendEmail}>
+          {step === 'request' && (
+            <form onSubmit={handleSubmitRequest}>
               <p>Ingrese su email, se enviará un código de 6 dígitos.</p>
               <div className="mb-4">
-                <label className="mb-2.5 block font-medium text-black dark:text-white">
+                <label className="block mb-2.5 font-medium text-black dark:text-white">
                   Email
                 </label>
                 <div className="relative">
@@ -129,45 +151,61 @@ const ResetPassword: React.FC = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Ingrese su  email"
-                    className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                    className="bg-transparent dark:bg-form-input focus-visible:shadow-none py-4 pr-10 pl-6 border border-stroke focus:border-primary dark:focus:border-primary dark:border-form-strokedark rounded-lg outline-none w-full text-black dark:text-white"
                     required
                   />
                 </div>
               </div>
               {errorMessage && (
-                <p className="text-red-500 mb-3">{errorMessage}</p>
+                <p className="mb-3 text-red-500">{errorMessage}</p>
               )}
               <div className="mb-5">
                 <input
                   type="submit"
                   value="Enviar email"
-                  className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90"
+                  className="bg-primary hover:bg-opacity-90 p-4 border border-primary rounded-lg w-full text-white transition cursor-pointer"
                 />
               </div>
-              
             </form>
-          ) : (
-            <form onSubmit={handleSubmitValidateCode}>
+          )}
+          {step === 'verify' && (
+            <form onSubmit={handleSubmitVerify}>
               <p>
                 Ingrese el código de 6 dígitos que recibiste al email {email}
               </p>
               <div className="mb-4">
-                <label className="mb-2.5 block font-medium text-black dark:text-white">
+                <label className="block mb-2.5 font-medium text-black dark:text-white">
                   Código
                 </label>
                 <div className="relative">
                   <input
                     type="number"
-                    value={code}
+                    value={codigo}
                     minLength={6}
-                    onChange={(e) => setCode(e.target.value)}
+                    onChange={(e) => setCodigo(e.target.value)}
                     placeholder="Ingrese el código"
-                    className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                    className="bg-transparent dark:bg-form-input focus-visible:shadow-none py-4 pr-10 pl-6 border border-stroke focus:border-primary dark:focus:border-primary dark:border-form-strokedark rounded-lg outline-none w-full text-black dark:text-white"
+                    required
                   />
                 </div>
               </div>
+              {errorMessage && (
+                <p className="mb-3 text-red-500">{errorMessage}</p>
+              )}
+              <div className="mt-4 mb-5">
+                <input
+                  type="submit"
+                  value="Verificar código"
+                  className="bg-primary hover:bg-opacity-90 p-4 border border-primary rounded-lg w-full text-white transition cursor-pointer"
+                />
+              </div>
+            </form>
+          )}
+          {step === 'reset' && (
+            <form onSubmit={handleSubmitReset}>
+              <p>Ingrese su nueva contraseña</p>
               <div className="mb-4">
-                <label className="mb-2.5 block font-medium text-black dark:text-white">
+                <label className="block mb-2.5 font-medium text-black dark:text-white">
                   Contraseña
                 </label>
                 <div className="relative">
@@ -175,13 +213,13 @@ const ResetPassword: React.FC = () => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                    placeholder="Ingrese su nueva contraseña"
+                    className="bg-transparent dark:bg-form-input focus-visible:shadow-none py-4 pr-10 pl-6 border border-stroke focus:border-primary dark:focus:border-primary dark:border-form-strokedark rounded-lg outline-none w-full text-black dark:text-white"
                   />
                 </div>
               </div>
               <div className="mb-6">
-                <label className="mb-2.5 block font-medium text-black dark:text-white">
+                <label className="block mb-2.5 font-medium text-black dark:text-white">
                   Repetir Contraseña
                 </label>
                 <div className="relative">
@@ -189,13 +227,13 @@ const ResetPassword: React.FC = () => {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter your password"
-                    className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                    placeholder="Re-ingrese su nueva contraseña"
+                    className="bg-transparent dark:bg-form-input focus-visible:shadow-none py-4 pr-10 pl-6 border border-stroke focus:border-primary dark:focus:border-primary dark:border-form-strokedark rounded-lg outline-none w-full text-black dark:text-white"
                   />
                 </div>
               </div>
               {errorMessage && <p className="text-red-500">{errorMessage}</p>}
-              <div className="mb-5 mt-4">
+              <div className="mt-4 mb-5">
                 <input
                   type="submit"
                   value="Restablecer Contraseña"

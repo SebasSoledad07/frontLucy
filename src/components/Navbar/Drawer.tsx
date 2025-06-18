@@ -60,8 +60,8 @@ const Drawer: FC<DrawerProps> = ({ isOpen, onClose }) => {
     0,
   );
   const amountInCents = Math.round(total * 100); // total is in pesos, convert to cents
-  const integritySecret = 'test_integrity_gqvGp7QagLhVAyPzLGcrMFFANjMFhdxk'; // WARNING: Exposed for demo only
-  const publicKey = 'pub_test_yqWgvLY7kBrbtjNyD3fr0Ys8HWEGob2Q';
+  const integritySecret = 'prod_integrity_gqOBSD33ZgkaWbDJ649DTN9dRG7y2ECN'; // WARNING: Exposed for demo only
+  const publicKey = 'pub_prod_6y5ASbfDsx7gaMrJLfJGB6ZBJdncftnf';
   const currency = 'COP';
   const [wompiError, setWompiError] = useState('');
 

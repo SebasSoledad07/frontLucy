@@ -1,12 +1,7 @@
-import React, {
-  createContext,
-  useState,
-  useContext,
-  useEffect,
-  ReactNode,
-} from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode, } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
+
 
 interface User {
   email: string;
@@ -62,7 +57,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('rol', response.data.rol);
         setTimeout(() => {
-          if (response.data.rol === 'ROLE_ADMINISTRADOR') {
+          if (
+            response.data.rol === 'ROLE_ADMINISTRADOR' ||
+            response.data.rol === 'ROLE_GERENTE_DE_VENTA' ||
+            response.data.rol === 'ROLE_COORDINADOR_DE_FACTURACION' ||
+            response.data.rol === 'ROLE_PRODUCT_MANAGER'
+          ) {
             window.location.href = '/admin';
           } else if (response.data.rol === 'ROLE_CLIENTE') {
             window.location.href = '/cliente';

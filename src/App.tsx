@@ -4,6 +4,7 @@ import {
   Routes,
   useLocation,
   useRoutes,
+  Outlet,
 } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
@@ -46,12 +47,21 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <Routes>
-          {/* Rutas protegidas para administradores */}
+          {/* Rutas protegidas para administradores y otros roles */}
           <Route
             path="/admin/*"
             element={
-              <ProtectedRoute requiredRole="ROLE_ADMINISTRADOR">
-                <DefaultLayout />
+              <ProtectedRoute
+                requiredRoles={[
+                  'ROLE_ADMINISTRADOR',
+                  'ROLE_GERENTE_DE_VENTA',
+                  'ROLE_COORDINADOR_DE_FACTURACION',
+                  'ROLE_PRODUCT_MANAGER',
+                ]}
+              >
+                <DefaultLayout>
+                  <Outlet />
+                </DefaultLayout>
               </ProtectedRoute>
             }
           >

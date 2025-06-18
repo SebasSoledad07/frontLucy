@@ -20,6 +20,10 @@ import AuthLayout from './AuthLayout'; // Asegúrate de importar correctamente
 
 // Asegúrate de importar correctamente
 
+// Asegúrate de importar correctamente
+
+// Asegúrate de importar correctamente
+
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,7 +51,12 @@ function Login() {
         localStorage.setItem('rol', response.data.rol);
 
         setTimeout(() => {
-          if (response.data.rol === 'ROLE_ADMINISTRADOR') {
+          if (
+            response.data.rol === 'ROLE_ADMINISTRADOR' ||
+            response.data.rol === 'ROLE_GERENTE_DE_VENTA' ||
+            response.data.rol === 'ROLE_COORDINADOR_DE_FACTURACION' ||
+            response.data.rol === 'ROLE_PRODUCT_MANAGER'
+          ) {
             window.location.href = '/admin';
           } else if (response.data.rol === 'ROLE_CLIENTE') {
             window.location.href = '/cliente';
@@ -63,28 +72,6 @@ function Login() {
     }
   }
 
-  /* const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-    try {
-      const { token, rol } = await login(email, password); // Usamos login del context
-
-      if (token) {
-        if (from) {
-          navigate(from, { replace: true }); // Redirige a donde intentó ir
-        } else if (rol === 'ROLE_ADMINISTRADOR') {
-          navigate('/admin', { replace: true });
-        } else if (rol === 'ROLE_CLIENTE') {
-          navigate('/cliente', { replace: true });
-        } else {
-          navigate('/unauthorized', { replace: true });
-        }
-      }
-    } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión');
-    }
-  };
-*/
   return (
     <AuthLayout>
       <div className="border-stroke dark:border-strokedark xl:border-l-2 w-full xl:w-1/2">

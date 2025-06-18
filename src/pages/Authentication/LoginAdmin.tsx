@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import AuthLayout from './AuthLayout';
 
+
 function LoginAdmin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -60,7 +61,12 @@ function LoginAdmin() {
       if (token) {
         if (from) {
           navigate(from, { replace: true }); // Redirige a donde intentó ir
-        } else if (rol === 'ROLE_ADMINISTRADOR') {
+        } if (
+          rol === 'ROLE_ADMINISTRADOR' ||
+          rol === 'ROLE_GERENTE_DE_VENTA' ||
+          rol === 'ROLE_COORDINADOR_DE_FACTURACION' ||
+          rol === 'ROLE_PRODUCT_MANAGER'
+        ) {
           navigate('/admin', { replace: true });
         } else if (rol === 'ROLE_CLIENTE') {
           navigate('/cliente', { replace: true });

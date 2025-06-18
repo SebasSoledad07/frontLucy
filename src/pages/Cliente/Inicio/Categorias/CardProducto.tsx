@@ -121,7 +121,7 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                 <Carousel
                   showThumbs={false}
                   infiniteLoop
-                  className="w-full h-64"
+                  className="w-full h-128"
                 >
                   {item.imagenes && item.imagenes.length > 0
                     ? item.imagenes.map((imagen: any, idx: number) => {
@@ -140,7 +140,7 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                             <img
                               src={imageUrl}
                               alt={`${item.nombre} - ${idx + 1}`}
-                              className="rounded-md w-full h-64 object-cover"
+                              className="rounded-md w-full h-90 object-cover"
                               onError={(e) =>
                                 (e.currentTarget.src = '/placeholder.png')
                               }
@@ -153,7 +153,7 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
                           <img
                             src="/placeholder.png"
                             alt="Sin imagen"
-                            className="rounded-md w-full h-64 object-cover"
+                            className="rounded-md w-full h-90 object-cover"
                           />
                         </div>,
                       ]}
@@ -227,11 +227,11 @@ const CardProducto = ({ categoriaId }: { categoriaId?: number }) => {
             )),
           )
         ) : (
-          <div className="flex flex-col justify-center items-center col-span-1 md:col-span-3 bg-[#FFFFFF] shadow-md p-4 border border-[#F4B1C7] rounded-lg min-h-64">
+          <div className="flex flex-col justify-center items-center col-span-1 md:col-span-3 bg-[#FFFFFF] shadow-md p-4 border border-[#F4B1C7] rounded-lg min-h-90">
             <img
               src="/placeholder.png"
               alt="Sin productos"
-              className="mb-4 w-32 h-64 object-contain"
+              className="mb-4 w-32 h-128 object-contain"
             />
             <p className="text-[#7A5B47] text-lg">
               No se encontraron productos.
